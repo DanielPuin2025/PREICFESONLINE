@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Icfes Online</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+    <!-- 0. SPLASH SCREEN (4 SEGUNDOS) -->
+    <div id="splash" class="splash-screen">
+        <div class="contenedor-logo">
+            <img src="logo.png.jpeg" alt="Logo Pre-Icfes" class="logo-animado">
+        </div>
+        <h2>Cargando ...</h2>
+    </div>
+
+    <!-- 2. SELECCIÓN DE ROL -->
+    <div id="pantalla-roles" class="contenedor oculto">
+        <div class="tarjeta">
+            <h2>Bienvenido</h2>
+            <p>Selecciona tu perfil de ingreso:</p>
+            <div class="grupo-botones">
+                <button onclick="mostrarFormulario('estudiante')">👨‍🎓 ESTUDIANTE</button>
+                <button onclick="mostrarFormulario('profesor')">👩‍🏫 PROFESOR/A ADMIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FORMULARIO DE REGISTRO COMPLETO -->
+    <div id="pantalla-registro" class="contenedor oculto">
+        <div class="tarjeta">
+            <h2 id="titulo-registro">Registro</h2>
+            <form id="form-registro" onsubmit="enviarDatos(event)">
+                <input type="text" id="reg-nombre" placeholder="Nombre completo" required>
+                <input type="email" id="reg-correo" placeholder="Correo (.com o .edu.co)" required>
+
+                <div class="campo-password">
+                    <input type="password" id="reg-pass" placeholder="Contraseña segura" required>
+                    <span class="btn-ojo" onclick="alternarPassword('reg-pass', this)">👁️</span>
+                </div>
+
+                <div id="campo-extra"></div>
+
+                <button type="submit" class="btn-enviar">Registrarse</button>
+                <button type="button" onclick="volverARoles()" class="btn-volver">Volver</button>
+
+                <p class="texto-pequeno">¿Ya tienes cuenta? <span class="enlace-morado" onclick="irALogin()">Iniciar sesión</span></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. VENTANA DE INICIO DE SESIÓN (LOGIN) -->
+    <div id="pantalla-login" class="contenedor oculto">
+        <div class="tarjeta">
+            <h2 id="titulo-login">Iniciar Sesión</h2>
+            <form id="form-login" onsubmit="enviarDatosLogin(event)">
+                <input type="email" id="log-correo" placeholder="Tu correo electrónico" required>
+
+                <div class="campo-password">
+                    <input type="password" id="log-pass" placeholder="Tu contraseña" required>
+                    <span class="btn-ojo" onclick="alternarPassword('log-pass', this)">👁️</span>
+                </div>
+
+                <button type="submit" class="btn-enviar">Ingresar</button>
+                <button type="button" onclick="irARegistro()" class="btn-volver">Volver al Registro</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. PANTALLA PRINCIPAL (aparece después de iniciar sesión) -->
+    <div id="pantalla-app" class="contenedor-app oculto">
+
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <img src="logo.png.jpeg" alt="Logo" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">PRE-ICFES<br>ONLINE</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item" data-seccion="pruebas" onclick="mostrarSeccion('pruebas')">📝 Pruebas</button>
+                <button class="nav-item" data-seccion="puntaje" onclick="mostrarSeccion('puntaje')">📊 Puntaje</button>
+                <button class="nav-item" data-seccion="puntajes" onclick="mostrarSeccion('puntajes')">📦 Puntajes</button>
+                <button class="nav-item" data-seccion="ranking" onclick="mostrarSeccion('ranking')">🚀 Ranking</button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</span>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="app-main">
+            <div class="app-topbar">
+                <span>Usuario: <span id="app-usuario-nombre">—</span></span>
+            </div>
+
+            <div class="app-content">
+
+                <!-- Sección PRUEBAS: contiene los niveles B, A, S y las sesiones -->
+                <div id="seccion-pruebas" class="seccion-app">
+
+                    <!-- VISTA 1: Selección de niveles B, A, S -->
+                    <div id="vista-niveles" class="vista-niveles">
+                        <div class="niveles-card">
+                            <div class="pill-niveles">NIVELES</div>
+                            <div class="fila-circulos">
+                                <div class="nivel-item">
+                                    <p class="msg-recomendado" id="msg-B"></p>
+                                    <div class="circulo-nivel" id="nivel-B" onclick="entrarPrueba('B')">B</div>
+                                </div>
+                                <div class="nivel-item">
+                                    <p class="msg-recomendado" id="msg-A"></p>
+                                    <div class="circulo-nivel" id="nivel-A" onclick="entrarPrueba('A')">A</div>
+                                </div>
+                                <div class="nivel-item">
+                                    <p class="msg-recomendado" id="msg-S"></p>
+                                    <div class="circulo-nivel" id="nivel-S" onclick="entrarPrueba('S')">S</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA 2: Sesiones del nivel elegido -->
+                    <div id="vista-sesiones" class="vista-sesiones oculto">
+                        <button class="btn-volver-niveles" onclick="volverANiveles()">← Volver a niveles</button>
+                        <h2 id="titulo-nivel-sesiones" class="titulo-nivel-sesiones"></h2>
+
+                        <div class="sesiones-contenedor">
+
+                            <!-- SESIÓN 1 (disponible) -->
+                            <div class="ventana-sesion">
+                                <h3 class="titulo-sesion">SESIÓN 1</h3>
+                                <div class="lista-materias">
+                                    <div class="materia materia-lectura">
+                                        <span class="materia-nombre">Lectura Crítica</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-matematicas">
+                                        <span class="materia-nombre">Matemáticas</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-ciudadanas">
+                                        <span class="materia-nombre">C. Ciudadanas</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-naturales">
+                                        <span class="materia-nombre">C. Naturales</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                </div>
+                                <button class="btn-iniciar-sesion" onclick="iniciarSesion(1)">Iniciar Sesión 1</button>
+                            </div>
+
+                            <!-- SESIÓN 2 (bloqueada hasta completar sesión 1) -->
+                            <div class="ventana-sesion bloqueada">
+                                <span class="candado-overlay">🔒</span>
+                                <h3 class="titulo-sesion">SESIÓN 2</h3>
+                                <div class="lista-materias">
+                                    <div class="materia materia-matematicas">
+                                        <span class="materia-nombre">Matemáticas</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-ciudadanas">
+                                        <span class="materia-nombre">C. Ciudadanas</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-naturales">
+                                        <span class="materia-nombre">C. Naturales</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                    <div class="materia materia-ingles">
+                                        <span class="materia-nombre">Inglés</span>
+                                        <span class="materia-cantidad">2 preguntas</span>
+                                    </div>
+                                </div>
+                                <button class="btn-iniciar-sesion" disabled>Iniciar Sesión 2</button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- VISTA 3: Entorno de la prueba (una materia a la vez) -->
+                    <div id="vista-prueba" class="vista-prueba oculto">
+                        <div class="prueba-topbar">
+                            <span class="prueba-logo">PRE-ICFES<br>ONLINE</span>
+                        </div>
+
+                        <div class="prueba-card">
+                            <div class="prueba-badge" id="prueba-materia-nombre">Materia</div>
+
+                            <p class="prueba-progreso" id="prueba-progreso"></p>
+
+                            <div class="prueba-enunciado" id="prueba-enunciado"></div>
+
+                            <div class="prueba-opciones">
+                                <div class="prueba-opcion" id="prueba-opcion-A" onclick="seleccionarOpcion('A')"></div>
+                                <div class="prueba-opcion" id="prueba-opcion-B" onclick="seleccionarOpcion('B')"></div>
+                                <div class="prueba-opcion" id="prueba-opcion-C" onclick="seleccionarOpcion('C')"></div>
+                                <div class="prueba-opcion" id="prueba-opcion-D" onclick="seleccionarOpcion('D')"></div>
+                            </div>
+
+                            <div class="prueba-navegacion">
+                                <button class="btn-volver-sesiones" onclick="salirDePrueba()">← Salir</button>
+                                <button class="btn-siguiente-materia" id="btn-siguiente-materia" onclick="continuarPrueba()">Siguiente →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Sección PUNTAJE -->
+                <div id="seccion-puntaje" class="seccion-app oculto">
+                    <p class="texto-proximamente">Próximamente disponible</p>
+                </div>
+
+                <!-- Sección PUNTAJES -->
+                <div id="seccion-puntajes" class="seccion-app oculto">
+                    <p class="texto-proximamente">Próximamente disponible</p>
+                </div>
+
+                <!-- Sección RANKING -->
+                <div id="seccion-ranking" class="seccion-app oculto">
+                    <p class="texto-proximamente">Próximamente disponible</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
