@@ -4,14 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Icfes Online</title>
-    <link rel="stylesheet" href="estilos.css">
+
+    <!-- ✏️ NUEVO: editor de texto enriquecido Quill (tema "snow") -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
+
+    <!-- ✏️ v=24: incluye los estilos de "Pruebas almacenadas" al final de estilos.css -->
+    <link rel="stylesheet" href="public/css/estilos.css?v=24">
+    <!-- ✏️ NUEVO: estilos del editor y del modo examen seguro (va DESPUÉS de estilos.css) -->
+    <link rel="stylesheet" href="public/css/editor-seguro.css?v=1">
 </head>
 <body>
 
     <!-- 0. SPLASH SCREEN (4 SEGUNDOS) -->
     <div id="splash" class="splash-screen">
         <div class="contenedor-logo">
-            <img src="logo.png.jpeg" alt="Logo Pre-Icfes" class="logo-animado">
+            <img src="public/images/logo.png.jpeg" alt="Logo Pre-Icfes" class="logo-animado">
         </div>
         <h2>Cargando ...</h2>
     </div>
@@ -23,7 +30,8 @@
             <p>Selecciona tu perfil de ingreso:</p>
             <div class="grupo-botones">
                 <button onclick="mostrarFormulario('estudiante')">👨‍🎓 ESTUDIANTE</button>
-                <button onclick="mostrarFormulario('profesor')">👩‍🏫 PROFESOR/A ADMIN</button>
+                <button onclick="mostrarFormulario('profesor')">👩‍🏫 PROFESOR/A</button>
+                <button onclick="mostrarFormulario('admin')">🛡️ ADMIN</button>
             </div>
         </div>
     </div>
@@ -75,19 +83,28 @@
         <!-- Barra lateral -->
         <div class="sidebar">
             <div class="sidebar-logo">
-                <img src="logo.png.jpeg" alt="Logo" class="sidebar-logo-img">
+                <img src="public/images/logo.png.jpeg" alt="Logo" class="sidebar-logo-img">
                 <span class="sidebar-logo-text">PRE-ICFES<br>ONLINE</span>
             </div>
 
+            <!-- Los textos de los botones cambian según el rol desde aplicarMenuPorRol() en script.js.
+                   - Estudiante: Pruebas / Puntaje actual / Historial / Ranking / Pruebas de profesores
+                   - Profesor:   Crear prueba / Pruebas creadas / Resultados de las pruebas / Pruebas almacenadas
+                   - Admin:      Crear prueba / Pruebas creadas / Base de datos registros -->
             <nav class="sidebar-nav">
-                <button class="nav-item" data-seccion="pruebas" onclick="mostrarSeccion('pruebas')">📝 Pruebas</button>
-                <button class="nav-item" data-seccion="puntaje" onclick="mostrarSeccion('puntaje')">📊 Puntaje</button>
-                <button class="nav-item" data-seccion="puntajes" onclick="mostrarSeccion('puntajes')">📦 Puntajes</button>
-                <button class="nav-item" data-seccion="ranking" onclick="mostrarSeccion('ranking')">🚀 Ranking</button>
+                <button class="nav-item" id="nav-pruebas" data-seccion="pruebas" onclick="mostrarSeccion('pruebas')">📝 Pruebas</button>
+                <button class="nav-item" id="nav-puntaje" data-seccion="puntaje" onclick="mostrarSeccion('puntaje')">📊 Puntaje actual</button>
+                <button class="nav-item" id="nav-puntajes" data-seccion="puntajes" onclick="mostrarSeccion('puntajes')">📦 Historial de puntajes</button>
+                <!-- ✏️ NUEVO (solo profesores): pruebas que el profesor almacenó desde "Pruebas creadas" -->
+                <button class="nav-item oculto" id="nav-almacenadas" data-seccion="almacenadas" onclick="mostrarSeccion('almacenadas')">🗂️ Pruebas almacenadas</button>
+                <button class="nav-item" id="nav-ranking" data-seccion="ranking" onclick="mostrarSeccion('ranking')">🚀 Ranking</button>
+                <button class="nav-item" id="nav-pruebas-prof" data-seccion="pruebas-profesores" onclick="mostrarSeccion('pruebas-profesores')">👩‍🏫 Pruebas de profesores</button>
+                <!-- ✏️ NUEVO (solo admin): tablas de estudiantes, profesores y administradores registrados -->
+                <button class="nav-item oculto" id="nav-registros" data-seccion="registros" onclick="mostrarSeccion('registros')">🗄️ Base de datos registros</button>
             </nav>
 
             <div class="sidebar-footer">
-                <span class="cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</span>
+                <span class="cerrar-sesion" onclick="confirmarCerrarSesion()">Cerrar sesión</span>
             </div>
         </div>
 
@@ -99,10 +116,12 @@
 
             <div class="app-content">
 
-                <!-- Sección PRUEBAS: contiene los niveles B, A, S y las sesiones -->
+                <!-- Sección PRUEBAS: en estudiantes contiene los niveles B, A, S y las sesiones.
+                     En profesores y administradores se muestra el formulario de "Crear prueba"
+                     (con el editor de texto enriquecido Quill). -->
                 <div id="seccion-pruebas" class="seccion-app">
 
-                    <!-- VISTA 1: Selección de niveles B, A, S -->
+                    <!-- VISTA 1 (solo estudiantes): Selección de niveles B, A, S -->
                     <div id="vista-niveles" class="vista-niveles">
                         <div class="niveles-card">
                             <div class="pill-niveles">NIVELES</div>
@@ -110,43 +129,52 @@
                                 <div class="nivel-item">
                                     <p class="msg-recomendado" id="msg-B"></p>
                                     <div class="circulo-nivel" id="nivel-B" onclick="entrarPrueba('B')">B</div>
+                                    <p class="nivel-etiqueta">Básico</p>
                                 </div>
                                 <div class="nivel-item">
                                     <p class="msg-recomendado" id="msg-A"></p>
                                     <div class="circulo-nivel" id="nivel-A" onclick="entrarPrueba('A')">A</div>
+                                    <p class="nivel-etiqueta">Alto</p>
                                 </div>
                                 <div class="nivel-item">
                                     <p class="msg-recomendado" id="msg-S"></p>
                                     <div class="circulo-nivel" id="nivel-S" onclick="entrarPrueba('S')">S</div>
+                                    <p class="nivel-etiqueta">Superior</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- VISTA 2: Sesiones del nivel elegido -->
+                    <!-- VISTA 2 (solo estudiantes): Sesiones del nivel elegido -->
                     <div id="vista-sesiones" class="vista-sesiones oculto">
-                        <button class="btn-volver-niveles" onclick="volverANiveles()">← Volver a niveles</button>
+                        <div class="fila-superior-sesiones">
+                            <button class="btn-volver-niveles" onclick="volverANiveles()">← Volver a niveles</button>
+                            <button class="btn-repetir-nivel oculto" id="btn-repetir-nivel" onclick="confirmarRepetirNivel()">🔄 Repetir prueba</button>
+                        </div>
                         <h2 id="titulo-nivel-sesiones" class="titulo-nivel-sesiones"></h2>
 
                         <div class="sesiones-contenedor">
+
+                            <!-- Cada materia lleva data-materia (el mismo nombre que en la base de
+                                 datos) para que script.js escriba la cantidad real de preguntas. -->
 
                             <!-- SESIÓN 1 (disponible) -->
                             <div class="ventana-sesion">
                                 <h3 class="titulo-sesion">SESIÓN 1</h3>
                                 <div class="lista-materias">
-                                    <div class="materia materia-lectura">
+                                    <div class="materia materia-lectura" data-materia="Lectura Crítica">
                                         <span class="materia-nombre">Lectura Crítica</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-matematicas">
+                                    <div class="materia materia-matematicas" data-materia="Matemáticas">
                                         <span class="materia-nombre">Matemáticas</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-ciudadanas">
+                                    <div class="materia materia-ciudadanas" data-materia="C. Ciudadanas">
                                         <span class="materia-nombre">C. Ciudadanas</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-naturales">
+                                    <div class="materia materia-naturales" data-materia="C. Naturales">
                                         <span class="materia-nombre">C. Naturales</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
@@ -154,24 +182,24 @@
                                 <button class="btn-iniciar-sesion" onclick="iniciarSesion(1)">Iniciar Sesión 1</button>
                             </div>
 
-                            <!-- SESIÓN 2 (bloqueada hasta completar sesión 1) -->
+                            <!-- SESIÓN 2 (bloqueada hasta completar sesión 1; script.js la desbloquea) -->
                             <div class="ventana-sesion bloqueada">
                                 <span class="candado-overlay">🔒</span>
                                 <h3 class="titulo-sesion">SESIÓN 2</h3>
                                 <div class="lista-materias">
-                                    <div class="materia materia-matematicas">
+                                    <div class="materia materia-matematicas" data-materia="Matemáticas">
                                         <span class="materia-nombre">Matemáticas</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-ciudadanas">
+                                    <div class="materia materia-ciudadanas" data-materia="C. Ciudadanas">
                                         <span class="materia-nombre">C. Ciudadanas</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-naturales">
+                                    <div class="materia materia-naturales" data-materia="C. Naturales">
                                         <span class="materia-nombre">C. Naturales</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
-                                    <div class="materia materia-ingles">
+                                    <div class="materia materia-ingles" data-materia="Inglés">
                                         <span class="materia-nombre">Inglés</span>
                                         <span class="materia-cantidad">2 preguntas</span>
                                     </div>
@@ -182,7 +210,9 @@
                         </div>
                     </div>
 
-                    <!-- VISTA 3: Entorno de la prueba (una materia a la vez) -->
+                    <!-- VISTA 3 (solo estudiantes): Entorno de la prueba (una materia a la vez).
+                         ✏️ El enunciado ahora es un <div> (antes <p>) porque muestra HTML con
+                         formato (negritas, superíndices, listas...). -->
                     <div id="vista-prueba" class="vista-prueba oculto">
                         <div class="prueba-topbar">
                             <span class="prueba-logo">PRE-ICFES<br>ONLINE</span>
@@ -193,7 +223,12 @@
 
                             <p class="prueba-progreso" id="prueba-progreso"></p>
 
-                            <div class="prueba-enunciado" id="prueba-enunciado"></div>
+                            <div class="prueba-enunciado-caja">
+                                <div class="prueba-imagen-wrap oculto" id="prueba-imagen-wrap">
+                                    <img id="prueba-imagen" class="prueba-imagen" alt="Imagen de la pregunta" draggable="false">
+                                </div>
+                                <div class="prueba-enunciado" id="prueba-enunciado"></div>
+                            </div>
 
                             <div class="prueba-opciones">
                                 <div class="prueba-opcion" id="prueba-opcion-A" onclick="seleccionarOpcion('A')"></div>
@@ -203,33 +238,460 @@
                             </div>
 
                             <div class="prueba-navegacion">
-                                <button class="btn-volver-sesiones" onclick="salirDePrueba()">← Salir</button>
+                                <button class="btn-volver-sesiones" onclick="confirmarSalirPrueba()">← Salir</button>
+                                <button class="btn-anterior-pregunta oculto" id="btn-anterior-pregunta" onclick="preguntaAnterior()">← Anterior</button>
                                 <button class="btn-siguiente-materia" id="btn-siguiente-materia" onclick="continuarPrueba()">Siguiente →</button>
                             </div>
                         </div>
                     </div>
 
+                    <!-- VISTA 4 (profesores y administradores): CREAR PRUEBA.
+                         - Profesor: materia + título + varias preguntas.
+                         - Administrador: nivel + sesión + materia + varias preguntas.
+                         ✏️ El enunciado y las opciones de cada pregunta usan el editor Quill
+                         (lo construye editor-seguro.js). -->
+                    <div id="vista-crear-prueba" class="vista-crear-prueba oculto">
+                        <div class="niveles-card">
+                            <div class="pill-niveles" id="cp-pill-titulo">CREAR PRUEBA</div>
+                            <form id="form-crear-pregunta" onsubmit="enviarPrueba(event)" style="width:100%; max-width:650px; display:flex; flex-direction:column; gap:15px;">
+
+                                <!-- Campos del PROFESOR -->
+                                <div id="cp-campos-profesor" class="cp-campos">
+                                    <select id="cp-materia" required>
+                                        <option value="" disabled selected>Selecciona tu materia</option>
+                                    </select>
+                                    <input type="text" id="cp-titulo" placeholder="Título de la prueba" required>
+                                </div>
+
+                                <!-- Campos del ADMINISTRADOR (script.js llena las opciones) -->
+                                <div id="cp-campos-admin" class="cp-campos oculto">
+                                    <div class="cp-fila-doble">
+                                        <select id="cp-nivel">
+                                            <option value="" disabled selected>Nivel</option>
+                                            <option value="B">B · Básico</option>
+                                            <option value="A">A · Alto</option>
+                                            <option value="S">S · Superior</option>
+                                        </select>
+                                        <select id="cp-sesion" onchange="actualizarMateriasAdmin()">
+                                            <option value="" disabled selected>Sesión</option>
+                                            <option value="1">Sesión 1</option>
+                                            <option value="2">Sesión 2</option>
+                                        </select>
+                                    </div>
+                                    <select id="cp-materia-nivel">
+                                        <option value="" disabled selected>Selecciona primero la sesión</option>
+                                    </select>
+                                </div>
+
+                                <!-- Aquí script.js va insertando los bloques de preguntas -->
+                                <div id="cp-preguntas"></div>
+
+                                <button type="button" class="btn-volver" onclick="agregarBloquePregunta()">＋ Añadir pregunta</button>
+                                <button type="submit" class="btn-enviar" style="border-radius:12px;">Guardar prueba</button>
+                                <!-- Solo aparece al editar una prueba (script.js lo muestra/oculta) -->
+                                <button type="button" class="btn-cancelar-edicion oculto" id="cp-btn-cancelar-edicion" onclick="cancelarEdicionPrueba()">Cancelar edición</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Plantilla de UNA pregunta; editor-seguro.js la clona cada vez que el
+                         usuario pulsa "Añadir pregunta" y convierte cada ".cp-rico" en un editor Quill.
+                           data-campo       -> nombre del campo (enunciado, a, b, c, d, texto_correcta, inc1, inc2, inc3)
+                           data-tipo        -> "enunciado" (barra completa) u "opcion" (barra corta, una línea)
+                           data-placeholder -> texto de ayuda -->
+                    <template id="tpl-pregunta-cp">
+                        <div class="cp-bloque-pregunta">
+                            <div class="cp-bloque-encabezado">
+                                <span class="cp-bloque-numero">Pregunta</span>
+                                <span class="cp-bloque-quitar" onclick="quitarBloquePregunta(this)">✕ Quitar</span>
+                            </div>
+
+                            <!-- Caja del enunciado: imagen opcional arriba (cuadro "+") y editor debajo -->
+                            <div class="cp-enunciado-caja">
+                                <div class="cp-imagen-zona">
+                                    <div class="cp-imagen-agregar" role="button" tabindex="0"
+                                         title="Añadir imagen" aria-label="Añadir imagen"
+                                         onclick="abrirModalImagen(this)"
+                                         onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }">+</div>
+
+                                    <div class="cp-imagen-preview oculto">
+                                        <img class="cp-imagen-vista" alt="Imagen de la pregunta">
+                                        <div class="cp-imagen-acciones">
+                                            <span class="cp-imagen-cambiar" onclick="abrirModalImagen(this)">Cambiar imagen</span>
+                                            <span class="cp-imagen-quitar" onclick="quitarImagenBloque(this)">✕ Quitar imagen</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cp-rico cp-rico-enunciado" data-campo="enunciado" data-tipo="enunciado"
+                                     data-placeholder="Texto de la pregunta (Ctrl+B negrita, Ctrl+. superíndice, Ctrl+, subíndice)">
+                                    <div class="cp-rico-editor"></div>
+                                </div>
+                            </div>
+
+                            <!-- Profesores y administradores: cómo se define la respuesta correcta
+                                 (elegir la letra en una lista o escribir el texto con letra aleatoria). -->
+                            <div class="cp-modo-selector">
+                                <select class="cp-modo-respuesta" onchange="cambiarModoRespuesta(this)">
+                                    <option value="letra">Respuesta correcta: elegir la letra en una lista</option>
+                                    <option value="aleatoria">Respuesta correcta: escribir el texto (letra aleatoria)</option>
+                                </select>
+                            </div>
+
+                            <!-- Modo "letra": 4 opciones y la letra correcta en lista desplegable -->
+                            <div class="cp-modo-letra">
+                                <div class="cp-rico cp-rico-opcion" data-campo="a" data-tipo="opcion" data-placeholder="Opción A"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="b" data-tipo="opcion" data-placeholder="Opción B"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="c" data-tipo="opcion" data-placeholder="Opción C"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="d" data-tipo="opcion" data-placeholder="Opción D"><div class="cp-rico-editor"></div></div>
+                                <select class="cp-correcta" required>
+                                    <option value="" disabled selected>Respuesta correcta</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+
+                            <!-- Modo "aleatoria": el texto de la respuesta correcta + 3 incorrectas.
+                                 Al guardar, el servidor mezcla las 4 y sortea en qué letra queda la correcta. -->
+                            <div class="cp-modo-aleatoria oculto">
+                                <div class="cp-rico cp-rico-opcion cp-rico-correcta" data-campo="texto_correcta" data-tipo="opcion" data-placeholder="Texto de la respuesta correcta"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="inc1" data-tipo="opcion" data-placeholder="Opción incorrecta 1"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="inc2" data-tipo="opcion" data-placeholder="Opción incorrecta 2"><div class="cp-rico-editor"></div></div>
+                                <div class="cp-rico cp-rico-opcion" data-campo="inc3" data-tipo="opcion" data-placeholder="Opción incorrecta 3"><div class="cp-rico-editor"></div></div>
+                                <p class="cp-ayuda-aleatoria">Al guardar, el sistema mezcla las 4 opciones y sortea en qué letra (A, B, C o D) queda la respuesta correcta.</p>
+                            </div>
+                        </div>
+                    </template>
+
                 </div>
 
-                <!-- Sección PUNTAJE -->
+                <!-- Sección PUNTAJE: en estudiantes muestra la última prueba presentada; en
+                     profesores "Pruebas creadas" (Subir / Eliminar / Almacenar / Editar); en administradores la
+                     lista de grupos de preguntas de los niveles (Editar / Eliminar / Promedio). -->
                 <div id="seccion-puntaje" class="seccion-app oculto">
-                    <p class="texto-proximamente">Próximamente disponible</p>
+                    <div class="puntaje-actual-card" id="puntaje-actual-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
+                    <div class="historial-card oculto" id="pruebas-creadas-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
                 </div>
 
-                <!-- Sección PUNTAJES -->
+                <!-- Sección PUNTAJES: historial del estudiante / resultados de las pruebas del profesor -->
                 <div id="seccion-puntajes" class="seccion-app oculto">
-                    <p class="texto-proximamente">Próximamente disponible</p>
+                    <div class="historial-card" id="historial-puntajes-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
+                    <div class="historial-card oculto" id="resultados-generales-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
                 </div>
 
-                <!-- Sección RANKING -->
+                <!-- ✏️ NUEVO: Sección PRUEBAS ALMACENADAS (solo profesores).
+                     Aquí quedan las pruebas que el profesor almacenó desde "Pruebas creadas";
+                     siguen apareciendo aunque las elimine de "Pruebas creadas". script.js la llena
+                     con cargarPruebasAlmacenadas(). -->
+                <div id="seccion-almacenadas" class="seccion-app oculto">
+                    <div class="historial-card" id="almacenadas-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
+                </div>
+
+                <!-- Sección RANKING (solo estudiantes): 3 columnas, una por nivel (B, A, S). -->
                 <div id="seccion-ranking" class="seccion-app oculto">
-                    <p class="texto-proximamente">Próximamente disponible</p>
+                    <div class="ranking-contenedor">
+                        <div class="ranking-columna">
+                            <div class="ranking-columna-titulo">RANKING DE NIVEL B</div>
+                            <div class="ranking-lista" id="ranking-lista-B">
+                                <p class="texto-proximamente">Cargando...</p>
+                            </div>
+                        </div>
+                        <div class="ranking-columna">
+                            <div class="ranking-columna-titulo">RANKING DE NIVEL A</div>
+                            <div class="ranking-lista" id="ranking-lista-A">
+                                <p class="texto-proximamente">Cargando...</p>
+                            </div>
+                        </div>
+                        <div class="ranking-columna">
+                            <div class="ranking-columna-titulo">RANKING DE NIVEL S</div>
+                            <div class="ranking-lista" id="ranking-lista-S">
+                                <p class="texto-proximamente">Cargando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✏️ NUEVO: Sección BASE DE DATOS REGISTROS (solo administradores).
+                     Tres botones (Estudiantes / Profesores / Administradores); al pulsar uno se ve su tabla. -->
+                <div id="seccion-registros" class="seccion-app oculto">
+                    <div class="historial-card registros-card">
+
+                        <!-- Menú: escoger qué tabla ver -->
+                        <div id="registros-menu" class="registros-menu">
+                            <div class="pill-niveles">Escoja qué tabla desea ver</div>
+                            <div class="registros-botones">
+                                <button type="button" class="btn-registro-tabla" onclick="cargarRegistros('estudiantes')">Estudiantes</button>
+                                <button type="button" class="btn-registro-tabla" onclick="cargarRegistros('profesores')">Profesores</button>
+                                <button type="button" class="btn-registro-tabla" onclick="cargarRegistros('administradores')">Administradores</button>
+                            </div>
+                        </div>
+
+                        <!-- Tabla elegida -->
+                        <div id="registros-vista" class="registros-vista oculto">
+                            <div class="registros-encabezado">
+                                <button type="button" class="btn-volver-niveles" onclick="mostrarMenuRegistros()">← Volver</button>
+                                <span class="historial-nivel-pill" id="registros-titulo"></span>
+                            </div>
+                            <div id="registros-contenido"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Sección PRUEBAS DE PROFESORES (solo estudiantes) -->
+                <div id="seccion-pruebas-profesores" class="seccion-app oculto">
+
+                    <!-- Lista de pruebas disponibles (script.js la llena) -->
+                    <div class="historial-card" id="lista-pp-contenido">
+                        <p class="texto-proximamente">Cargando...</p>
+                    </div>
+
+                    <!-- Entorno de la prueba (reutiliza los estilos prueba-*).
+                         ✏️ El enunciado es un <div> para poder mostrar HTML con formato. -->
+                    <div id="vista-prueba-pp" class="vista-prueba tema-profesor oculto">
+                        <div class="prueba-topbar">
+                            <span class="prueba-logo">PRE-ICFES<br>ONLINE</span>
+                        </div>
+
+                        <div class="prueba-card">
+                            <div class="prueba-badge" id="pp-titulo">Prueba</div>
+                            <p class="prueba-progreso" id="pp-progreso"></p>
+
+                            <div class="prueba-enunciado-caja">
+                                <div class="prueba-imagen-wrap oculto" id="pp-imagen-wrap">
+                                    <img id="pp-imagen" class="prueba-imagen" alt="Imagen de la pregunta" draggable="false">
+                                </div>
+                                <div class="prueba-enunciado" id="pp-enunciado"></div>
+                            </div>
+
+                            <div class="prueba-opciones">
+                                <div class="prueba-opcion" id="pp-opcion-A" onclick="seleccionarOpcionPP('A')"></div>
+                                <div class="prueba-opcion" id="pp-opcion-B" onclick="seleccionarOpcionPP('B')"></div>
+                                <div class="prueba-opcion" id="pp-opcion-C" onclick="seleccionarOpcionPP('C')"></div>
+                                <div class="prueba-opcion" id="pp-opcion-D" onclick="seleccionarOpcionPP('D')"></div>
+                            </div>
+
+                            <div class="prueba-navegacion">
+                                <button class="btn-volver-sesiones" onclick="confirmarSalirPruebaPP()">← Salir</button>
+                                <button class="btn-anterior-pregunta oculto" id="pp-btn-anterior" onclick="preguntaAnteriorPP()">← Anterior</button>
+                                <button class="btn-siguiente-materia" id="pp-btn-siguiente" onclick="continuarPruebaPP()">Siguiente →</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+<!-- MODAL PERSONALIZADO (reutilizable): confirmaciones (SÍ/NO) y avisos simples (solo Aceptar). -->
+<div id="modal-confirmacion" class="modal-overlay oculto">
+    <div class="modal-caja">
+        <p class="modal-pregunta" id="modal-pregunta">¿Estás seguro?</p>
+        <button class="modal-boton-si" id="modal-boton-si" onclick="confirmarSi()">SÍ</button>
+        <span class="modal-boton-no" id="modal-boton-no" onclick="confirmarNo()">NO</span>
+    </div>
+</div>
+
+<!-- MODAL "SELECCIONAR PRUEBA" (profesores): lo usan "Subir prueba" y "Eliminar prueba". -->
+<div id="modal-seleccion" class="modal-overlay oculto" onclick="if (event.target === this) cerrarModalSeleccion()">
+    <div class="modal-caja modal-seleccion-caja">
+        <p class="modal-pregunta" id="modal-seleccion-titulo">Seleccione la prueba</p>
+        <div class="seleccion-lista" id="modal-seleccion-lista"></div>
+        <span class="modal-boton-no" onclick="cerrarModalSeleccion()">Cancelar</span>
+    </div>
+</div>
+
+<!-- MODAL "GRADO, FECHAS Y HORAS DE LA PRUEBA" (profesores, segundo paso de "Subir prueba") -->
+<div id="modal-fechas" class="modal-overlay oculto" onclick="if (event.target === this) cerrarModalFechas()">
+    <div class="modal-caja">
+        <p class="modal-pregunta">Grado, fechas y horas de la prueba</p>
+        <p class="fechas-prueba-nombre" id="modal-fechas-prueba"></p>
+
+        <div class="grados-campo">
+            <p class="grados-titulo">¿A qué grado va dirigida?</p>
+
+            <!-- Una lista desplegable por grado: "Todos" (todo el grado) o cursos sueltos (A, B, C) -->
+            <details class="grado-desplegable">
+                <summary>
+                    <span class="grado-desplegable-nombre">9°</span>
+                    <span class="grado-desplegable-resumen">Ninguno</span>
+                </summary>
+                <div class="grado-desplegable-lista">
+                    <label class="grado-opcion grado-opcion-todos">
+                        <input type="checkbox" name="grado-prueba" value="9" data-todos="1" onchange="alCambiarGrado(this)">
+                        <span>9° (Todos)</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="9-A" onchange="alCambiarGrado(this)">
+                        <span>9-A</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="9-B" onchange="alCambiarGrado(this)">
+                        <span>9-B</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="9-C" onchange="alCambiarGrado(this)">
+                        <span>9-C</span>
+                    </label>
+                </div>
+            </details>
+
+            <details class="grado-desplegable">
+                <summary>
+                    <span class="grado-desplegable-nombre">10°</span>
+                    <span class="grado-desplegable-resumen">Ninguno</span>
+                </summary>
+                <div class="grado-desplegable-lista">
+                    <label class="grado-opcion grado-opcion-todos">
+                        <input type="checkbox" name="grado-prueba" value="10" data-todos="1" onchange="alCambiarGrado(this)">
+                        <span>10° (Todos)</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="10-A" onchange="alCambiarGrado(this)">
+                        <span>10-A</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="10-B" onchange="alCambiarGrado(this)">
+                        <span>10-B</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="10-C" onchange="alCambiarGrado(this)">
+                        <span>10-C</span>
+                    </label>
+                </div>
+            </details>
+
+            <details class="grado-desplegable">
+                <summary>
+                    <span class="grado-desplegable-nombre">11°</span>
+                    <span class="grado-desplegable-resumen">Ninguno</span>
+                </summary>
+                <div class="grado-desplegable-lista">
+                    <label class="grado-opcion grado-opcion-todos">
+                        <input type="checkbox" name="grado-prueba" value="11" data-todos="1" onchange="alCambiarGrado(this)">
+                        <span>11° (Todos)</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="11-A" onchange="alCambiarGrado(this)">
+                        <span>11-A</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="11-B" onchange="alCambiarGrado(this)">
+                        <span>11-B</span>
+                    </label>
+                    <label class="grado-opcion">
+                        <input type="checkbox" name="grado-prueba" value="11-C" onchange="alCambiarGrado(this)">
+                        <span>11-C</span>
+                    </label>
+                </div>
+            </details>
+
+            <p class="grados-ayuda">Abre cada grado y marca "Todos" o los cursos que quieras. Los demás estudiantes la verán bloqueada.</p>
+        </div>
+
+        <!-- ✏️ NUEVO: además de la fecha, ahora se pide la HORA de inicio (desbloqueo) y de finalización (cierre) -->
+        <div class="fechas-campos">
+            <label for="fecha-inicio">
+                Fecha de inicio
+                <input type="date" id="fecha-inicio" onchange="alCambiarFechaInicio()">
+            </label>
+            <label for="hora-inicio">
+                Hora de inicio (desbloqueo)
+                <input type="time" id="hora-inicio">
+            </label>
+            <label for="fecha-fin">
+                Fecha de finalización
+                <input type="date" id="fecha-fin">
+            </label>
+            <label for="hora-fin">
+                Hora de finalización (cierre)
+                <input type="time" id="hora-fin">
+            </label>
+        </div>
+
+        <p class="fechas-ayuda">La prueba se desbloquea en la fecha y hora de inicio y se cierra en la fecha y hora de finalización. Antes de esa hora los estudiantes la verán bloqueada.</p>
+        <p class="fechas-error" id="modal-fechas-error"></p>
+
+        <button type="button" class="modal-boton-si" id="modal-fechas-boton" onclick="confirmarSubirPrueba()">Subir prueba</button>
+        <span class="modal-boton-no" onclick="cerrarModalFechas()">Cancelar</span>
+    </div>
+</div>
+
+<!-- ✏️ NUEVO: MODAL "PROMEDIO" (admin): mínimo de respuestas correctas para pasar de nivel -->
+<div id="modal-promedio" class="modal-overlay oculto" onclick="if (event.target === this) cerrarModalPromedio()">
+    <div class="modal-caja">
+        <p class="modal-pregunta">Promedio para pasar de nivel</p>
+        <p class="fechas-ayuda">Escribe cuántas respuestas correctas debe tener el estudiante entre la Sesión 1 y la Sesión 2 para pasar al siguiente nivel.</p>
+
+        <div id="promedio-lista" class="promedio-lista"></div>
+
+        <p class="fechas-error" id="modal-promedio-error"></p>
+
+        <button type="button" class="modal-boton-si" id="modal-promedio-boton" onclick="guardarPromedio()">Guardar</button>
+        <span class="modal-boton-no" onclick="cerrarModalPromedio()">Cancelar</span>
+    </div>
+</div>
+
+<!-- MODAL DE DETALLE POR MATERIA (historial de puntajes): pregunta por pregunta -->
+<div id="modal-detalle" class="modal-detalle-overlay oculto" onclick="if(event.target === this) cerrarModalDetalle()">
+    <div class="modal-detalle-caja">
+        <div class="modal-detalle-header">
+            <h3 id="modal-detalle-titulo">Materia</h3>
+            <span class="modal-detalle-cerrar" onclick="cerrarModalDetalle()">✕</span>
+        </div>
+        <div class="modal-detalle-cuerpo" id="modal-detalle-cuerpo"></div>
+    </div>
+</div>
+
+<!-- MODAL "AÑADIR IMAGEN" (Crear prueba): se puede pegar (Ctrl + V), arrastrar o elegir un archivo. -->
+<div id="modal-imagen" class="modal-imagen-overlay oculto" onclick="if (event.target === this) cerrarModalImagen()">
+    <div class="modal-imagen-caja">
+        <h3 class="modal-imagen-titulo">Añadir imagen</h3>
+
+        <div class="modal-imagen-zona" id="modal-imagen-zona" tabindex="0">
+            <p class="modal-imagen-zona-titulo">Pega la imagen aquí</p>
+            <p class="modal-imagen-zona-ayuda">Copia una imagen y presiona Ctrl + V (⌘ + V en Mac). También puedes arrastrarla hasta este cuadro.</p>
+        </div>
+
+        <p class="modal-imagen-o">o</p>
+
+        <button type="button" class="modal-imagen-btn-archivo" onclick="elegirArchivoImagen()">Elegir desde mis archivos</button>
+        <input type="file" id="modal-imagen-archivo" accept="image/*" hidden>
+
+        <p class="modal-imagen-error" id="modal-imagen-error"></p>
+        <span class="modal-imagen-cancelar" onclick="cerrarModalImagen()">Cancelar</span>
+    </div>
+</div>
+
+<!-- ✏️ NUEVO: ESCUDO DEL MODO EXAMEN SEGURO.
+     Cuando el estudiante intenta copiar, pegar, cortar, hacer clic derecho, capturar la
+     pantalla, etc., este panel cubre todo con un desenfoque (backdrop-filter: blur) y
+     un brillo muy bajo (brightness) durante unos segundos. -->
+<div id="escudo-examen" aria-hidden="true">
+    <div class="escudo-caja">
+        <p class="escudo-titulo">⚠️ Acción no permitida durante el examen</p>
+        <p class="escudo-motivo" id="escudo-motivo"></p>
+    </div>
+</div>
+
+<!-- Quill (editor enriquecido). Debe cargarse ANTES de script.js -->
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+<script src="public/js/script.js?v=39"></script>
+<!-- ✏️ NUEVO: editor enriquecido + modo examen seguro + expulsión por perder el foco.
+     Debe cargarse DESPUÉS de script.js (reemplaza y envuelve algunas de sus funciones). -->
+<script src="public/js/editor-seguro.js?v=2"></script>
 </body>
 </html>

@@ -1,0 +1,3060 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: #e7e1fb;
+    color: #3a2e5c;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.splash-screen {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    transition: opacity 0.5s ease;
+}
+
+.contenedor-logo {
+    width: 320px;
+    height: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: flotar 3s ease-in-out infinite;
+}
+
+.logo-animado {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 40px;
+}
+
+.splash-screen h2 {
+    margin-top: 25px;
+    color: #6c5ce7;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+@keyframes flotar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-18px); }
+}
+
+.contenedor {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.oculto {
+    display: none !important;
+}
+
+.tarjeta {
+    background: #ffffff;
+    padding: 35px 25px;
+    border-radius: 24px;
+    border: 2px solid #a78bfa;
+    box-shadow: 0 15px 35px rgba(124, 77, 255, 0.2);
+    text-align: center;
+}
+
+.tarjeta h2 {
+    margin-bottom: 8px;
+    font-size: 1.7rem;
+    color: #7c4dff;
+}
+
+.tarjeta p {
+    color: #7a6ea3;
+    margin-bottom: 25px;
+}
+
+.grupo-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+button {
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.grupo-botones button {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+}
+
+button:hover {
+    transform: scale(1.02);
+}
+
+/* Foco visible para quien navega con teclado */
+button:focus-visible,
+.nav-item:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    background: #f4f2fb;
+    border: 1px solid #c9b8f0;
+    border-radius: 10px;
+    color: #3a2e5c;
+    font-size: 1rem;
+}
+
+input::placeholder {
+    color: #9f92c2;
+}
+
+input:focus {
+    outline: none;
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.3);
+}
+
+.campo-password {
+    position: relative;
+    width: 100%;
+}
+
+.btn-ojo {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.2rem;
+    user-select: none;
+}
+
+.btn-enviar {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: white;
+}
+
+.btn-volver {
+    background: transparent;
+    color: #7c4dff;
+    border: 1px solid #a78bfa;
+}
+
+.texto-pequeno {
+    font-size: 0.9rem;
+    color: #7a6ea3;
+    margin-top: 18px;
+    text-align: center;
+}
+
+.enlace-morado {
+    color: #7c4dff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.enlace-morado:hover {
+    color: #5a3fd6;
+    text-decoration: underline;
+}
+
+/* ===================================================
+   PANTALLA PRINCIPAL (Sidebar + Contenido)
+   =================================================== */
+.contenedor-app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background: #f4f2fb;
+}
+
+/* --- Barra lateral --- */
+/* Un poco más ancha (270px) para que "Resultados de las pruebas" y
+   "Pruebas de profesores" quepan en una sola línea. */
+.sidebar {
+    width: 270px;
+    min-width: 270px;
+    background: #ffffff;
+    border-right: 1px solid #e5defa;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.sidebar-logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.sidebar-logo-text {
+    color: #7c4dff;
+    font-weight: 900;
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 12px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 13px 14px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #5b5568;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-item:hover {
+    background: #f1edfe;
+    transform: none;
+}
+
+.nav-item.activo {
+    background: #efe9ff;
+    color: #7c4dff;
+}
+
+.sidebar-footer {
+    padding: 15px 20px 0;
+    border-top: 1px solid #eee;
+}
+
+.cerrar-sesion {
+    color: #e74c3c;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.cerrar-sesion:hover {
+    text-decoration: underline;
+}
+
+/* --- Panel principal --- */
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.app-topbar {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    padding: 18px 30px;
+    font-weight: 700;
+    display: flex;
+    justify-content: flex-end;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+}
+
+.app-content {
+    padding: 40px 30px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+/* Todas las secciones ocupan el ancho disponible para que sus tarjetas
+   se centren igual, sin importar el rol (estudiante, profesor o admin). */
+.seccion-app {
+    width: 100%;
+}
+
+.seccion-app.oculto {
+    display: none;
+}
+
+.texto-proximamente {
+    color: #8a80a8;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-top: 40px;
+    text-align: center;
+}
+
+/* --- Tarjeta de "Puntaje actual" (última prueba presentada) --- */
+#seccion-puntaje {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.puntaje-actual-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 32px;
+    border: 2px solid #a78bfa;
+    padding: 45px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(124, 77, 255, 0.15);
+    height: fit-content;
+}
+
+.puntaje-etiqueta {
+    color: #7a6ea3;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+}
+
+.puntaje-nivel-pill {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 800;
+    padding: 9px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    margin-bottom: 26px;
+    box-shadow: 0 8px 18px rgba(124, 77, 255, 0.3);
+}
+
+.puntaje-numero {
+    font-size: 4rem;
+    font-weight: 900;
+    color: #7c4dff;
+    line-height: 1;
+}
+
+.puntaje-numero-total {
+    font-size: 2rem;
+    color: #c3b6ec;
+    font-weight: 800;
+}
+
+.puntaje-porcentaje {
+    margin-top: 12px;
+    font-weight: 700;
+    color: #3a2e5c;
+    font-size: 1.05rem;
+}
+
+.puntaje-fecha {
+    margin-top: 20px;
+    color: #7a6ea3;
+    font-size: 0.85rem;
+}
+
+/* Desglose por sesión dentro de la tarjeta de "Puntaje actual": muestra
+   Sesión 1 y Sesión 2 por separado cuando el estudiante ya presentó
+   ambas, además del total combinado que se ve arriba en la tarjeta. */
+.puntaje-sesiones-detalle {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e5defa;
+}
+
+.puntaje-sesion-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f4f2fb;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #3a2e5c;
+}
+
+/* --- Tarjeta de niveles (dentro de la sección Pruebas) --- */
+.vista-niveles,
+.vista-sesiones {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.niveles-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 32px;
+    border: 2px solid #a78bfa;
+    padding: 45px 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+}
+
+.pill-niveles {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 900;
+    padding: 16px 55px;
+    border-radius: 40px;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    margin-bottom: 55px;
+    box-shadow: 0 10px 25px rgba(124, 77, 255, 0.35);
+    text-align: center;
+}
+
+.fila-circulos {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    padding-top: 35px;
+    row-gap: 60px;
+}
+
+.nivel-item {
+    position: relative;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.msg-recomendado:empty {
+    display: none;
+}
+
+.msg-recomendado:not(:empty) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    height: 30px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-radius: 16px;
+    box-shadow: 0 6px 14px rgba(34, 197, 94, 0.35);
+    white-space: nowrap;
+    z-index: 2;
+    text-align: center;
+}
+
+.circulo-nivel {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: #e3ddfb;
+    border: 3px solid #8b6cf5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 4.2rem;
+    font-weight: 900;
+    color: #7c4dff;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.circulo-nivel:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(124, 77, 255, 0.25);
+}
+
+.circulo-nivel.bloqueado {
+    background: #e5e2ee;
+    border-color: #c3bcd9;
+    color: #a79fc2;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.circulo-nivel.bloqueado:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Etiqueta de texto (BÁSICO / ALTO / SUPERIOR) debajo de cada círculo de nivel */
+.nivel-etiqueta {
+    margin-top: 16px;
+    color: #6c5ce7;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+/* Si el nivel está bloqueado, la etiqueta se ve más apagada, igual que el círculo */
+.circulo-nivel.bloqueado + .nivel-etiqueta {
+    color: #a79fc2;
+}
+
+/* ===================================================
+   VISTA DE SESIONES (dentro de un nivel B/A/S)
+   =================================================== */
+
+/* Fila superior con "Volver a niveles" a la izquierda y
+   "Repetir prueba" a la derecha (solo aparece cuando el estudiante ya
+   presentó las dos sesiones del intento actual). */
+.fila-superior-sesiones {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-volver-niveles {
+    align-self: flex-start;
+    background: transparent;
+    color: #7c4dff;
+    border: 1px solid #a78bfa;
+    padding: 10px 20px;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+}
+
+.btn-repetir-nivel {
+    background: linear-gradient(135deg, #ff8a65, #f4565c);
+    color: #ffffff;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(244, 86, 92, 0.3);
+}
+
+.titulo-nivel-sesiones {
+    color: #7c4dff;
+    font-size: 1.6rem;
+    font-weight: 900;
+    margin-bottom: 30px;
+}
+
+.sesiones-contenedor {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.ventana-sesion {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid #a78bfa;
+    border-radius: 26px;
+    padding: 30px 25px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 12px 25px rgba(124, 77, 255, 0.15);
+    transition: opacity 0.3s ease;
+}
+
+.titulo-sesion {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #7c4dff;
+    letter-spacing: 1px;
+}
+
+.lista-materias {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.materia {
+    padding: 12px 16px;
+    border-radius: 14px;
+    color: #ffffff;
+    font-weight: 800;
+    text-align: center;
+    font-size: 0.95rem;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.materia-cantidad {
+    font-size: 0.7rem;
+    font-weight: 700;
+    opacity: 0.85;
+    text-transform: none;
+    letter-spacing: 0.3px;
+}
+
+.materia-lectura {
+    background: #f6d743;
+    color: #4a3b00;
+}
+
+.materia-matematicas {
+    background: #f4565c;
+}
+
+.materia-ciudadanas {
+    background: #f79157;
+}
+
+.materia-naturales {
+    background: #22c55e;
+}
+
+.materia-ingles {
+    background: #0f8fa4;
+}
+
+.btn-iniciar-sesion {
+    margin-top: 5px;
+    width: 100%;
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+    color: #ffffff;
+}
+
+.ventana-sesion.bloqueada {
+    opacity: 0.6;
+}
+
+/* Botón deshabilitado: se aplica sin importar en qué ventana esté, porque
+   con el modelo de bloqueo CUALQUIERA de las dos ventanas de sesión
+   (o las dos a la vez, cuando ambas ya fueron presentadas) puede quedar
+   bloqueada. */
+.btn-iniciar-sesion:disabled {
+    background: #c9c2e0;
+    cursor: not-allowed;
+}
+
+.candado-overlay {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    font-size: 1.3rem;
+}
+
+/* ===================================================
+   ENTORNO DE LA PRUEBA (una materia a la vez, temática por color)
+   También lo usa "Pruebas de profesores" (con el tema de su materia).
+   =================================================== */
+.vista-prueba {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--tema-fondo, #f4f2fb);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    z-index: 500;
+    overflow-y: auto;
+}
+
+.prueba-topbar {
+    width: 100%;
+    padding: 20px 30px;
+}
+
+.prueba-logo {
+    color: var(--tema-logo, #7c4dff);
+    font-weight: 900;
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.prueba-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 950px;
+    margin: 0 20px 30px;
+    border-radius: 28px;
+    padding: 35px 30px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+/* max-width + overflow-wrap: en las pruebas de profesores el badge muestra
+   el título de la prueba, que puede ser largo. */
+.prueba-badge {
+    display: inline-block;
+    align-self: flex-start;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+    font-weight: 900;
+    font-size: 1.1rem;
+    padding: 14px 30px;
+    border-radius: 30px;
+    margin-bottom: 25px;
+}
+
+.prueba-progreso {
+    color: var(--tema-logo, #7c4dff);
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+}
+
+/* Caja del enunciado (color de la materia). Contiene la imagen opcional
+   centrada arriba y el texto de la pregunta debajo. */
+.prueba-enunciado-caja {
+    background: var(--tema-caja, #eee);
+    border-radius: 18px;
+    min-height: 130px;
+    margin-bottom: 25px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* centra la imagen horizontalmente */
+    justify-content: center;
+    gap: 18px;
+}
+
+/* Imagen opcional (tira cómica, gráfico, etc.) centrada dentro de la caja */
+.prueba-imagen-wrap {
+    align-self: center;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+}
+
+.prueba-imagen {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+}
+
+/* Texto del enunciado (ya no lleva fondo propio: usa el de la caja) */
+.prueba-enunciado {
+    width: 100%;
+    font-weight: 600;
+    font-size: 1.02rem;
+    line-height: 1.5;
+    color: #2e2540;
+}
+
+.prueba-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 25px;
+    max-width: 700px;
+}
+
+.prueba-opcion {
+    background: var(--tema-caja, #eee);
+    border-radius: 20px;
+    min-height: 44px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;         /* el texto de la respuesta va en peso normal */
+    color: #2e2540;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.prueba-opcion:hover {
+    transform: scale(1.01);
+}
+
+/* Solo la letra (A. B. C. D.) va en negrilla */
+.prueba-opcion-letra {
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
+.prueba-opcion-texto {
+    flex: 1;
+    font-weight: 500;
+}
+
+.prueba-opcion.seleccionada {
+    border-color: var(--tema-badge, #7c4dff);
+    background: #ffffff;
+}
+
+.prueba-navegacion {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.btn-volver-sesiones {
+    background: transparent;
+    color: #7c4dff;
+    border: 1px solid #a78bfa;
+}
+
+.btn-siguiente-materia {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+}
+
+.btn-anterior-pregunta {
+    background: #e3ddfb;
+    color: #7c4dff;
+    border-radius: 30px;
+    padding: 12px 24px;
+}
+
+.btn-anterior-pregunta:hover {
+    background: #d5cbf9;
+}
+
+/* --- Temas por materia --- */
+.tema-lectura {
+    --tema-fondo: #fdf1b8;
+    --tema-caja: #fbe9a0;
+    --tema-badge: #f6d743;
+    --tema-texto-badge: #4a3b00;
+    --tema-logo: #d1af1f;
+}
+
+.tema-matematicas {
+    --tema-fondo: #ffd7d7;
+    --tema-caja: #ffb3b3;
+    --tema-badge: #f4565c;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #f4565c;
+}
+
+.tema-ciudadanas {
+    --tema-fondo: #ffe3d1;
+    --tema-caja: #ffd2b3;
+    --tema-badge: #f79157;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #f79157;
+}
+
+.tema-naturales {
+    --tema-fondo: #d7f5db;
+    --tema-caja: #c0eec7;
+    --tema-badge: #22c55e;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #22c55e;
+}
+
+.tema-ingles {
+    --tema-fondo: #d3ecfb;
+    --tema-caja: #bfe3fa;
+    --tema-badge: #0f8fa4;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #0f8fa4;
+}
+
+/* Temas de las materias que solo existen en las pruebas de profesores.
+   Los colores salen de las plantillas de pantalla de cada materia
+   (fondo de la página, caja del enunciado y opciones, píldora y logo).
+   Lectura Crítica/Español usa el amarillo de Lectura y Ciencias Económicas
+   y Políticas/Sociales el naranja de Ciudadanas. */
+
+/* Física: turquesa */
+.tema-fisica {
+    --tema-fondo: #d7ffff;
+    --tema-caja: #d7ffff;
+    --tema-badge: #2ad0d0;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #2ad0d0;
+}
+
+/* Química: azul (la caja es más intensa que el fondo) */
+.tema-quimica {
+    --tema-fondo: #bae3f9;
+    --tema-caja: #73cdff;
+    --tema-badge: #0072b1;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #0072b1;
+}
+
+/* Informática: verde azulado */
+.tema-informatica {
+    --tema-fondo: #99e1d3;
+    --tema-caja: #99e1d3;
+    --tema-badge: #3c9f8b;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #3c9f8b;
+}
+
+/* Filosofía: índigo */
+.tema-filosofia {
+    --tema-fondo: #bfbcff;
+    --tema-caja: #bfbcff;
+    --tema-badge: #5e57ff;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #5e57ff;
+}
+
+/* Estadísticas: gris */
+.tema-estadisticas {
+    --tema-fondo: #e1e1e1;
+    --tema-caja: #d3d3d3;
+    --tema-badge: #959595;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #959595;
+}
+
+/* Educación Artística: rosa */
+.tema-artistica {
+    --tema-fondo: #fecbea;
+    --tema-caja: #fecbea;
+    --tema-badge: #ff65c3;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #ff65c3;
+}
+
+/* Ética: azul acero */
+.tema-etica {
+    --tema-fondo: #b3cedf;
+    --tema-caja: #b3cedf;
+    --tema-badge: #6d9cb8;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #6d9cb8;
+}
+
+/* Religión: dorado */
+.tema-religion {
+    --tema-fondo: #ffebac;
+    --tema-caja: #ffebac;
+    --tema-badge: #d3af37;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #d3af37;
+}
+
+/* Educación Física: rojo/salmón */
+.tema-deportiva {
+    --tema-fondo: #fe9695;
+    --tema-caja: #fe9695;
+    --tema-badge: #c63232;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #c63232;
+}
+
+/* Emprendimiento: naranja */
+.tema-emprendimiento {
+    --tema-fondo: #ffdbaf;
+    --tema-caja: #ffdbaf;
+    --tema-badge: #ff8c00;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #ff8c00;
+}
+
+/* Tema morado (el de la app): color por defecto de una prueba de profesor
+   cuya materia no tenga un color asignado. */
+.tema-profesor {
+    --tema-fondo: #e7e1fb;
+    --tema-caja: #efe9ff;
+    --tema-badge: #7c4dff;
+    --tema-texto-badge: #ffffff;
+    --tema-logo: #7c4dff;
+}
+
+@media (max-width: 700px) {
+    .sidebar {
+        width: 80px;
+        min-width: 80px;
+    }
+    .sidebar-logo-text,
+    .cerrar-sesion {
+        display: none;
+    }
+    .nav-item {
+        justify-content: center;
+        text-align: center;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        padding: 10px 4px;
+        overflow-wrap: anywhere;
+    }
+    .nivel-item {
+        width: 160px;
+    }
+    .fila-circulos {
+        gap: 30px;
+    }
+    .circulo-nivel {
+        width: 130px;
+        height: 130px;
+        font-size: 3.2rem;
+    }
+    .nivel-etiqueta {
+        font-size: 0.85rem;
+        margin-top: 12px;
+    }
+    .msg-recomendado:not(:empty) {
+        width: 160px;
+        font-size: 0.55rem;
+    }
+    .ventana-sesion {
+        width: 100%;
+        max-width: 320px;
+    }
+    .prueba-card {
+        margin: 0 12px 20px;
+        padding: 25px 18px;
+    }
+    .prueba-imagen {
+        max-height: 260px;
+    }
+    .fila-superior-sesiones {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .btn-repetir-nivel {
+        font-size: 0.75rem;
+        padding: 8px 14px;
+    }
+    .prueba-navegacion {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .prueba-navegacion button {
+        flex: 1 1 auto;
+        font-size: 0.85rem;
+        padding: 10px 14px;
+    }
+    .app-content {
+        padding: 25px 14px;
+    }
+}
+
+/* ===================================================
+   SELECT DE GRADO / MATERIA (registro)
+   =================================================== */
+select#reg-extra {
+    width: 100%;
+    padding: 14px;
+    background: #f4f2fb;
+    border: 1px solid #c9b8f0;
+    border-radius: 10px;
+    color: #3a2e5c;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+select#reg-extra:focus {
+    outline: none;
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.3);
+}
+
+/* ===================================================
+   MODAL DE CONFIRMACIÓN / AVISO
+   =================================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-caja {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px 35px 30px;
+    width: 90%;
+    max-width: 380px;
+    max-height: 92vh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.modal-pregunta {
+    color: #1a1a1a;
+    font-weight: 800;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    margin-bottom: 28px;
+    white-space: pre-line; /* respeta los saltos de línea "\n" de los mensajes */
+    overflow-wrap: anywhere; /* correos o nombres largos no se salen de la ventana */
+}
+
+.modal-boton-si {
+    width: 100%;
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    padding: 16px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 22px;
+}
+
+.modal-boton-si:hover {
+    transform: scale(1.02);
+}
+
+.modal-boton-si:disabled {
+    background: #c9c2e0;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.modal-boton-no {
+    display: block;
+    color: #1a1a1a;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.modal-boton-no:hover {
+    text-decoration: underline;
+}
+
+/* ===================================================
+   HISTORIAL DE PUNTAJES (todas las pruebas presentadas)
+   Esta misma tarjeta la reutilizan: "Pruebas creadas" (profesor y
+   administrador), "Resultados de las pruebas" (profesor) y "Pruebas de
+   profesores" (estudiante).
+   =================================================== */
+#seccion-puntajes {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.historial-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 650px;
+    border-radius: 32px;
+    border: 2px solid #a78bfa;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 15px 35px rgba(124, 77, 255, 0.15);
+    min-height: 560px;
+    height: fit-content;
+}
+
+.historial-vacio {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.historial-etiqueta {
+    color: #7a6ea3;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.historial-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.historial-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: #f4f2fb;
+    border: 1px solid #e5defa;
+    border-radius: 18px;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+}
+
+/* Pastilla morada (nivel/sesión, materia o título de prueba). Si el texto
+   es muy largo (por ejemplo el título que puso un profesor) se recorta
+   con "…" en lugar de romper la fila. */
+.historial-nivel-pill {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.historial-resultado {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.historial-numero {
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: #3a2e5c;
+}
+
+.historial-porcentaje {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #7c4dff;
+}
+
+.historial-fecha {
+    color: #7a6ea3;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+@media (max-width: 700px) {
+    .historial-fila {
+        justify-content: center;
+        text-align: center;
+    }
+    .historial-fecha {
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+    .historial-card {
+        min-height: 420px;
+        padding: 30px 18px;
+    }
+}
+
+/* ===================================================
+   ⋮ MENÚ DE MATERIAS (historial de puntajes) Y MODAL DE DETALLE
+   =================================================== */
+.historial-fila {
+    position: relative;
+    padding-right: 44px; /* espacio para el botón ⋮ */
+}
+
+/* Las filas que NO tienen el botón ⋮ (resultados que ve el profesor)
+   no necesitan ese espacio extra a la derecha. */
+.historial-fila:not(:has(.historial-detalle-wrap)) {
+    padding-right: 18px;
+}
+
+.historial-detalle-wrap {
+    position: absolute;
+    top: 14px;
+    right: 12px;
+}
+
+.btn-detalle-historial {
+    background: transparent;
+    border: none;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #7a6ea3;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+    line-height: 1;
+}
+
+.btn-detalle-historial:hover {
+    background: #e5defa;
+    color: #7c4dff;
+    transform: none;
+}
+
+.dropdown-materias {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e5defa;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(124, 77, 255, 0.25);
+    min-width: 210px;
+    padding: 8px;
+    z-index: 60;
+}
+
+.materia-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #3a2e5c;
+}
+
+.materia-dropdown-item:hover {
+    background: #f1edfe;
+}
+
+.materia-dropdown-puntaje {
+    color: #7c4dff;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.dropdown-cargando {
+    padding: 10px 12px;
+    color: #7a6ea3;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Modal con el detalle pregunta por pregunta de una materia */
+.modal-detalle-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2100;
+    padding: 20px;
+}
+
+.modal-detalle-caja {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.modal-detalle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 26px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-detalle-header h3 {
+    color: #7c4dff;
+    font-size: 1.2rem;
+}
+
+.modal-detalle-cerrar {
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #7a6ea3;
+    font-weight: 900;
+    padding: 4px 8px;
+}
+
+.modal-detalle-cerrar:hover {
+    color: #3a2e5c;
+}
+
+.modal-detalle-cuerpo {
+    padding: 20px 26px 26px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.detalle-pregunta-card {
+    background: #f9f8fd;
+    border: 1px solid #e5defa;
+    border-radius: 16px;
+    padding: 16px 18px;
+}
+
+.detalle-pregunta-numero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #7a6ea3;
+    margin-bottom: 10px;
+}
+
+.detalle-estado {
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.detalle-estado-ok {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.detalle-estado-mal {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Imagen opcional dentro de la tarjeta de detalle de una pregunta
+   (historial de puntajes -> menú de materias -> pregunta). */
+.detalle-pregunta-imagen {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.detalle-pregunta-enunciado {
+    font-weight: 600;
+    color: #2e2540;
+    margin-bottom: 12px;
+    line-height: 1.45;
+}
+
+.detalle-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detalle-opcion {
+    background: #ffffff;
+    border: 1px solid #e5defa;
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-size: 0.88rem;
+    color: #3a2e5c;
+}
+
+.opcion-correcta {
+    border-color: #22c55e;
+    background: #f0fdf4;
+    font-weight: 700;
+}
+
+.opcion-incorrecta {
+    border-color: #f4565c;
+    background: #fff1f1;
+    font-weight: 700;
+}
+
+@media (max-width: 700px) {
+    .modal-detalle-header,
+    .modal-detalle-cuerpo {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+}
+
+/* ===================================================
+   RANKING POR NIVEL (3 columnas: B, A, S) — solo estudiantes
+   =================================================== */
+#seccion-ranking {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Cuadrícula de 3 columnas iguales (B, A, S) que SIEMPRE quedan una al lado
+   de la otra en pantallas de computador o portátil, aunque el navegador
+   tenga zoom. Solo pasan a una debajo de otra en pantallas pequeñas (ver
+   los @media más abajo). minmax(0, 1fr) evita que un nombre largo
+   ensanche una columna. Las tres tarjetas tienen la misma altura. */
+.ranking-contenedor {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+    align-items: stretch;
+}
+
+.ranking-columna {
+    background: #ffffff;
+    border: 2px solid #a78bfa;
+    border-radius: 24px;
+    padding: 25px 20px;
+    min-width: 0;
+    min-height: 620px;
+    box-shadow: 0 12px 28px rgba(124, 77, 255, 0.15);
+}
+
+.ranking-columna-titulo {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 900;
+    text-align: center;
+    padding: 12px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+.ranking-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ranking-fila {
+    background: #f4f2fb;
+    border: 1px solid #e5defa;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: #3a2e5c;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.ranking-podio {
+    background: #efe9ff;
+    border-color: #c9b8f0;
+}
+
+.ranking-posicion {
+    display: block;
+    color: #7c4dff;
+    font-weight: 900;
+    margin-bottom: 2px;
+}
+
+.ranking-nombre {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+/* Pantallas medianas (portátiles con zoom, tabletas en horizontal): se
+   mantienen las 3 columnas, pero más compactas para que todo quepa. */
+@media (max-width: 1150px) {
+    .ranking-contenedor {
+        gap: 16px;
+    }
+    .ranking-columna {
+        padding: 20px 14px;
+        border-radius: 20px;
+    }
+    .ranking-columna-titulo {
+        font-size: 0.8rem;
+        padding: 10px 6px;
+        margin-bottom: 16px;
+    }
+    .ranking-fila {
+        font-size: 0.78rem;
+        padding: 9px 10px;
+    }
+    .ranking-columna .texto-proximamente {
+        font-size: 1rem;
+    }
+}
+
+/* Pantallas pequeñas (tabletas en vertical y celulares): una columna debajo
+   de otra, cada una a todo el ancho. */
+@media (max-width: 900px) {
+    .ranking-contenedor {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 520px;
+        gap: 20px;
+    }
+    .ranking-columna {
+        min-height: 0;
+        padding: 22px 18px;
+    }
+    .ranking-columna-titulo {
+        font-size: 0.95rem;
+    }
+    .ranking-fila {
+        font-size: 0.85rem;
+    }
+}
+
+/* ===================================================
+   CREAR PRUEBA (profesor y administrador)
+   - Profesor: materia + título + bloques de preguntas.
+   - Administrador: nivel + sesión + materia + bloques de preguntas, con el
+     selector de cómo se define la respuesta correcta.
+   =================================================== */
+.vista-crear-prueba {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.vista-crear-prueba .pill-niveles {
+    margin-bottom: 35px;
+}
+
+#form-crear-pregunta select,
+#form-crear-pregunta input,
+#form-crear-pregunta textarea {
+    width: 100%;
+    padding: 14px;
+    background: #f4f2fb;
+    border: 1px solid #c9b8f0;
+    border-radius: 10px;
+    color: #3a2e5c;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+#form-crear-pregunta textarea {
+    resize: vertical;
+}
+
+#form-crear-pregunta select:focus,
+#form-crear-pregunta input:focus,
+#form-crear-pregunta textarea:focus {
+    outline: none;
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.3);
+}
+
+#form-crear-pregunta #cp-titulo {
+    font-weight: 700;
+}
+
+/* Botón "＋ Añadir pregunta": borde punteado para distinguirlo de "Volver" */
+#form-crear-pregunta .btn-volver {
+    border-style: dashed;
+}
+
+/* Grupos de campos según el rol: profesor (materia + título) o
+   administrador (nivel + sesión + materia). */
+.cp-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Nivel y Sesión, uno al lado del otro */
+.cp-fila-doble {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+/* Aviso con la materia del profesor (viene de su registro) */
+.cp-materia-info {
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #5b4a8f;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.cp-materia-info strong {
+    color: #7c4dff;
+    font-weight: 900;
+}
+
+/* Contenedor de los bloques de pregunta */
+#cp-preguntas {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Un bloque = una pregunta completa (enunciado, imagen, 4 opciones y
+   respuesta correcta). */
+.cp-bloque-pregunta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fbfaff;
+    border: 1.5px solid #e5defa;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.cp-bloque-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.cp-bloque-numero {
+    color: #7c4dff;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.cp-bloque-quitar {
+    color: #e74c3c;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cp-bloque-quitar:hover {
+    text-decoration: underline;
+}
+
+/* --- Solo administrador: cómo se define la respuesta correcta --- */
+.cp-modo-selector {
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+#form-crear-pregunta .cp-modo-selector select {
+    font-weight: 700;
+    color: #5b4a8f;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+/* Modo "letra": 4 opciones + lista con la letra correcta.
+   Modo "aleatoria": texto de la correcta + 3 incorrectas. */
+.cp-modo-letra,
+.cp-modo-aleatoria {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* La respuesta correcta escrita se distingue en verde */
+#form-crear-pregunta .cp-texto-correcta {
+    border-color: #22c55e;
+    background: #f0fdf4;
+    font-weight: 700;
+}
+
+#form-crear-pregunta .cp-texto-correcta:focus {
+    border-color: #16a34a;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.cp-ayuda-aleatoria {
+    color: #7a6ea3;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ===================================================
+   PRUEBAS CREADAS (profesor y administrador)
+   Cada prueba (o grupo de preguntas) lleva el color de su materia
+   (--tema-badge / --tema-fondo).
+   =================================================== */
+.pregunta-creada-fila {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--tema-fondo, #f4f2fb);
+    border: 1px solid #e5defa;
+    border-left: 8px solid var(--tema-badge, #a78bfa);
+    border-radius: 18px;
+    padding: 14px 18px;
+    text-align: left;
+}
+
+.pregunta-creada-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pregunta-creada-enunciado {
+    color: #3a2e5c;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.pregunta-creada-pie {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pregunta-creada-fecha {
+    color: #7a6ea3;
+    font-size: 0.78rem;
+}
+
+/* Pastilla con el color de la materia (usa las variables del tema). Va
+   después de .historial-nivel-pill para sobreescribir su fondo morado. */
+.pill-materia {
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+}
+
+/* --- Botones de arriba a la derecha en "Pruebas creadas" (profesor) ---
+   Azul: "Subir prueba". Rojo: "Eliminar prueba". Uno encima del otro.
+   Usan el mismo borde redondeado (12px) que el botón morado
+   "Guardar prueba" de la pantalla "Crear prueba". */
+.pc-acciones {
+    align-self: flex-end;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.btn-pc {
+    min-width: 170px;
+    padding: 11px 22px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    color: #ffffff;
+}
+
+.btn-pc-subir {
+    background: linear-gradient(135deg, #38c9f7, #0ea5e9);
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.3);
+}
+
+.btn-pc-eliminar {
+    background: linear-gradient(135deg, #ff6b6b, #e63946);
+    box-shadow: 0 6px 14px rgba(230, 57, 70, 0.3);
+}
+
+/* --- Etiqueta de estado de una prueba (sin subir / programada / activa / finalizada) --- */
+.estado-pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.estado-sin-subir {
+    background: #ececf3;
+    color: #6b6480;
+}
+
+.estado-programada {
+    background: #fff3d6;
+    color: #a86a00;
+}
+
+.estado-activa {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.estado-finalizada {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ===================================================
+   ADMINISTRADOR: "PRUEBAS CREADAS" (preguntas de los niveles B, A y S)
+   Las preguntas se agrupan por nivel; cada grupo (sesión + materia) tiene
+   sus botones "Editar" y "Eliminar".
+   =================================================== */
+.admin-nivel-titulo {
+    align-self: flex-start;
+    color: #7c4dff;
+    font-weight: 900;
+    font-size: 1.05rem;
+    margin-top: 10px;
+}
+
+.admin-nivel-titulo:first-child {
+    margin-top: 0;
+}
+
+.pregunta-creada-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pregunta-creada-acciones {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-eliminar-grupo {
+    background: linear-gradient(135deg, #ff6b6b, #e63946);
+    color: #ffffff;
+    font-size: 0.85rem;
+    padding: 10px 24px;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(230, 57, 70, 0.3);
+}
+
+.pregunta-creada-acciones .btn-editar-prueba {
+    margin-left: 0;
+    padding: 10px 24px;
+}
+
+/* ===================================================
+   VISTA PROFESOR: "RESULTADOS DE LAS PRUEBAS" (quién presentó las suyas)
+   =================================================== */
+.resultado-general-nombre {
+    font-weight: 800;
+    color: #3a2e5c;
+    font-size: 0.9rem;
+}
+
+/* ===================================================
+   VISTA ESTUDIANTE: "PRUEBAS DE PROFESORES"
+   Lista de pruebas creadas por los profesores. Cada fila lleva el color
+   de su materia (por ejemplo, Matemáticas en rojo). Cada una se presenta
+   una sola vez: al lado se ve el botón "Presentar" o, si ya la hizo, su
+   resultado. Si la fecha de inicio no ha llegado, aparece bloqueada. El
+   entorno de la prueba reutiliza .vista-prueba con el tema de la materia.
+   =================================================== */
+#seccion-pruebas-profesores {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.pp-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--tema-fondo, #f4f2fb);
+    border: 1px solid #e5defa;
+    border-left: 8px solid var(--tema-badge, #a78bfa);
+    border-radius: 18px;
+    padding: 16px 18px;
+    text-align: left;
+}
+
+/* Prueba bloqueada (aún no llega la fecha de inicio) o cerrada */
+.pp-fila.pp-bloqueada {
+    opacity: 0.7;
+}
+
+.pp-info {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.pp-titulo {
+    color: #3a2e5c;
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1.3;
+    margin-bottom: 4px;
+    overflow-wrap: anywhere;
+}
+
+.pp-meta {
+    color: #7a6ea3;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.pp-meta .pill-materia {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    vertical-align: middle;
+}
+
+.pp-accion {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.btn-presentar-pp {
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+    font-size: 0.85rem;
+    padding: 10px 24px;
+    border-radius: 30px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 700px) {
+    .pp-fila {
+        justify-content: center;
+        text-align: center;
+    }
+    .pp-info {
+        flex-basis: 100%;
+    }
+}
+
+/* ===================================================
+   CREAR PRUEBA: IMAGEN OPCIONAL DE LA PREGUNTA
+   Caja del enunciado = imagen arriba (cuadro morado con "+") y texto
+   debajo, igual que la verá el estudiante. Al pulsar el "+" se abre el
+   modal para pegar la imagen o elegirla desde los archivos.
+   =================================================== */
+.cp-enunciado-caja {
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+#form-crear-pregunta .cp-enunciado-caja textarea {
+    background: #ffffff;
+}
+
+.cp-imagen-zona {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.cp-imagen-agregar {
+    width: 100%;
+    max-width: 220px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 2.5px solid #a78bfa;
+    border-radius: 16px;
+    color: #7c4dff;
+    font-size: 2.8rem;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.cp-imagen-agregar:hover {
+    background: #f4f0ff;
+    border-color: #7c4dff;
+    transform: scale(1.03);
+}
+
+.cp-imagen-agregar:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+.cp-imagen-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+}
+
+.cp-imagen-vista {
+    display: block;
+    max-width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.cp-imagen-acciones {
+    display: flex;
+    gap: 18px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.cp-imagen-cambiar {
+    color: #7c4dff;
+    cursor: pointer;
+}
+
+.cp-imagen-quitar {
+    color: #e74c3c;
+    cursor: pointer;
+}
+
+.cp-imagen-cambiar:hover,
+.cp-imagen-quitar:hover {
+    text-decoration: underline;
+}
+
+/* --- Modal "Añadir imagen" (pegar o elegir archivo) --- */
+.modal-imagen-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2050;
+    padding: 20px;
+}
+
+.modal-imagen-caja {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 30px 28px 24px;
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.modal-imagen-titulo {
+    color: #7c4dff;
+    font-size: 1.25rem;
+    font-weight: 900;
+    margin-bottom: 18px;
+}
+
+.modal-imagen-zona {
+    border: 2.5px dashed #a78bfa;
+    border-radius: 18px;
+    background: #f9f8fd;
+    padding: 30px 18px;
+    color: #5b4a8f;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.modal-imagen-zona:focus,
+.modal-imagen-zona.arrastrando {
+    outline: none;
+    border-color: #7c4dff;
+    background: #efe9ff;
+}
+
+.modal-imagen-zona-titulo {
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+}
+
+.modal-imagen-zona-ayuda {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #7a6ea3;
+}
+
+.modal-imagen-o {
+    margin: 14px 0;
+    color: #7a6ea3;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.modal-imagen-btn-archivo {
+    width: 100%;
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    border-radius: 40px;
+}
+
+.modal-imagen-error {
+    min-height: 1.2em;
+    margin-top: 12px;
+    color: #dc2626;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.modal-imagen-cancelar {
+    display: inline-block;
+    margin-top: 10px;
+    color: #1a1a1a;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.modal-imagen-cancelar:hover {
+    text-decoration: underline;
+}
+
+/* ===================================================
+   MODALES DE "SUBIR PRUEBA" Y "ELIMINAR PRUEBA"
+   - modal-seleccion: lista de pruebas para elegir una (subir o borrar).
+   - modal-fechas: fecha de inicio y de finalización de la prueba.
+   Se usan las mismas clases .modal-overlay / .modal-caja del resto de
+   ventanas para que se vean igual.
+   =================================================== */
+.modal-seleccion-caja {
+    max-width: 440px;
+}
+
+.seleccion-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 22px;
+    padding: 2px;
+}
+
+.seleccion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: var(--tema-fondo, #f4f2fb);
+    border: 2px solid var(--tema-badge, #a78bfa);
+    border-radius: 14px;
+    padding: 12px 14px;
+    text-align: left;
+    color: #3a2e5c;
+}
+
+.seleccion-item:hover {
+    transform: scale(1.02);
+}
+
+.seleccion-item-pill {
+    flex-shrink: 0;
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 5px 11px;
+    border-radius: 20px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.seleccion-item-texto {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.seleccion-item-titulo {
+    font-weight: 800;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+}
+
+.seleccion-item-meta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #7a6ea3;
+}
+
+.fechas-prueba-nombre {
+    color: #7c4dff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin: -14px 0 18px;
+    overflow-wrap: anywhere;
+}
+
+.fechas-campos {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+    margin-bottom: 14px;
+}
+
+.fechas-campos label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #3a2e5c;
+}
+
+.fechas-ayuda {
+    color: #7a6ea3;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.fechas-error {
+    min-height: 1.2em;
+    margin-bottom: 14px;
+    color: #dc2626;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* ===================================================
+   SUBIR PRUEBA: SELECCIÓN DEL GRADO Y DEL CURSO
+   Una lista desplegable por grado (9°, 10° y 11°). Al abrirla se puede marcar
+   "Todos" (todo el grado) o cursos sueltos (A, B, C). En la cabecera se ve
+   un resumen de lo marcado. Se abre "hacia abajo" dentro de la misma ventana
+   (no flota), así no se corta cuando la ventana tiene scroll.
+   =================================================== */
+.grados-campo {
+    text-align: left;
+    margin-bottom: 16px;
+}
+
+.grados-titulo {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #3a2e5c;
+    margin-bottom: 8px;
+}
+
+.grado-desplegable {
+    border: 2px solid #c9b8f0;
+    border-radius: 12px;
+    background: #f4f2fb;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.grado-desplegable.con-seleccion {
+    border-color: #7c4dff;
+    background: #efe9ff;
+}
+
+.grado-desplegable summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    user-select: none;
+}
+
+.grado-desplegable summary::-webkit-details-marker {
+    display: none;
+}
+
+.grado-desplegable summary::after {
+    content: "▾";
+    color: #7c4dff;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.grado-desplegable[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.grado-desplegable summary:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: -3px;
+}
+
+.grado-desplegable-nombre {
+    font-weight: 900;
+    font-size: 1rem;
+    color: #3a2e5c;
+}
+
+.grado-desplegable-resumen {
+    flex: 1;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #7a6ea3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.grado-desplegable.con-seleccion .grado-desplegable-resumen {
+    color: #7c4dff;
+}
+
+.grado-desplegable-lista {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 12px 10px;
+    background: #ffffff;
+    border-top: 1px solid #e5defa;
+}
+
+.grado-opcion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #3a2e5c;
+    padding: 7px 8px;
+    border-radius: 8px;
+}
+
+.grado-opcion:hover {
+    background: #f1edfe;
+}
+
+/* "Todos" ocupa toda la primera fila */
+.grado-opcion-todos {
+    grid-column: 1 / -1;
+    background: #f4f2fb;
+}
+
+/* Casilla pequeña (le quita a la casilla el estilo de los campos de texto) */
+.grado-opcion input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    accent-color: #7c4dff;
+    cursor: pointer;
+}
+
+.grado-opcion input:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+.grados-ayuda {
+    color: #7a6ea3;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin-top: 6px;
+}
+
+/* Campos extra del registro (grado + código único en estudiantes; solo el
+   código único en profesores): se apilan con el mismo espacio que el resto. */
+#campo-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* ===================================================
+   PRUEBAS CREADAS: BOTÓN "EDITAR"
+   Va abajo a la derecha de cada prueba, con el color de su materia.
+   El pie de la tarjeta queda con la información (fecha y estado) a la
+   izquierda y el botón a la derecha.
+   =================================================== */
+.pregunta-creada-pie {
+    align-items: flex-end;
+}
+
+.pregunta-creada-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.btn-editar-prueba {
+    margin-left: auto;
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+    font-size: 0.85rem;
+    padding: 10px 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Botón "Cancelar edición" (solo se ve mientras se edita una prueba) */
+.btn-cancelar-edicion {
+    background: transparent;
+    color: #e74c3c;
+    border: 1px solid #f1a9a0;
+}
+
+/* ===================================================
+   VISTA PROFESOR: "RESULTADOS DE LAS PRUEBAS"
+   Cada resultado se ve con el color de la prueba que se presentó (por
+   ejemplo, Matemáticas en rojo): materia y título de la prueba, nombre y
+   grado del estudiante, fecha y hora en que la presentó y, a la derecha,
+   la cantidad de respuestas correctas.
+   =================================================== */
+.resultado-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--tema-fondo, #f4f2fb);
+    border: 1px solid #e5defa;
+    border-left: 8px solid var(--tema-badge, #a78bfa);
+    border-radius: 18px;
+    padding: 14px 18px;
+    text-align: left;
+}
+
+.resultado-fila-info {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.resultado-fila-encabezado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.resultado-fila-titulo {
+    color: #3a2e5c;
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.resultado-fila-estudiante {
+    color: #3a2e5c;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.resultado-fila-fecha {
+    color: #7a6ea3;
+    font-size: 0.8rem;
+}
+
+.resultado-fila-puntaje {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.resultado-fila-numero {
+    font-weight: 900;
+    font-size: 1.7rem;
+    line-height: 1;
+    color: #3a2e5c;
+}
+
+.resultado-fila-detalle {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #5b4a8f;
+}
+
+@media (max-width: 700px) {
+    .resultado-fila {
+        justify-content: center;
+        text-align: center;
+    }
+    .resultado-fila-encabezado {
+        justify-content: center;
+    }
+    .resultado-fila-puntaje {
+        align-items: center;
+    }
+    .cp-fila-doble {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .pregunta-creada-acciones {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* ===================================================
+   ADMINISTRADOR: "BASE DE DATOS REGISTROS"
+   Menú con dos botones (Estudiantes / Profesores) y tabla de registros.
+   Cada tabla muestra la contraseña oculta con un ojito para verla y, en
+   la última columna, un botón rojo para eliminar al usuario.
+   =================================================== */
+#seccion-registros {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Un poco más ancha que el resto de tarjetas: la tabla tiene 5-6 columnas */
+.registros-card {
+    max-width: 1120px;
+}
+
+.registros-menu {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+}
+
+.registros-menu .pill-niveles {
+    margin-bottom: 40px;
+    padding: 16px 40px;
+    font-size: 1.2rem;
+}
+
+.registros-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.btn-registro-tabla {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-size: 1.1rem;
+    padding: 18px;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(124, 77, 255, 0.3);
+}
+
+.registros-vista {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.registros-encabezado {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+#registros-contenido {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.registros-tabla-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e5defa;
+    border-radius: 16px;
+}
+
+.registros-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.registros-tabla th {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-weight: 800;
+    padding: 12px 14px;
+    white-space: nowrap;
+}
+
+.registros-tabla td {
+    padding: 11px 14px;
+    color: #3a2e5c;
+    font-weight: 600;
+    border-top: 1px solid #e5defa;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+}
+
+.registros-tabla tbody tr:nth-child(even) {
+    background: #f4f2fb;
+}
+
+.registros-tabla tbody tr:hover {
+    background: #efe9ff;
+}
+
+/* --- Contraseña con ojito --- */
+.pass-celda {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 150px;
+}
+
+.pass-texto {
+    flex: 1;
+    min-width: 0;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.88rem;
+    letter-spacing: 0.5px;
+    overflow-wrap: anywhere;
+}
+
+/* El texto oculto (••••••••) se ve un poco más suave que la contraseña visible */
+.pass-texto[data-visible="0"] {
+    color: #8a80a8;
+    letter-spacing: 2px;
+}
+
+.btn-ojo-tabla {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    padding: 4px 6px;
+    font-size: 1.1rem;
+    line-height: 1;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-ojo-tabla:hover {
+    background: #e5defa;
+    transform: none;
+}
+
+/* --- Columna de acciones (botón eliminar) --- */
+.registros-tabla th.col-accion,
+.registros-tabla td.col-accion {
+    text-align: center;
+    white-space: nowrap;
+    width: 1%;
+}
+
+.btn-borrar-registro {
+    background: linear-gradient(135deg, #ff6b6b, #e63946);
+    color: #ffffff;
+    font-size: 0.8rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(230, 57, 70, 0.3);
+}
+
+.btn-borrar-registro:focus-visible,
+.btn-ojo-tabla:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+    .registros-card {
+        padding: 30px 12px;
+    }
+    .registros-tabla {
+        font-size: 0.82rem;
+    }
+    .registros-tabla th,
+    .registros-tabla td {
+        padding: 10px 10px;
+    }
+    .btn-borrar-registro {
+        padding: 7px 10px;
+        font-size: 0.75rem;
+    }
+}
+/* ===================================================================
+   ✏️ NUEVO — pegar AL FINAL de estilos.css (después de todo lo demás)
+   1) Administrador: botón "Promedio" + ventana del promedio
+   2) Estudiante: texto con el mínimo para pasar de nivel
+   3) Subir prueba: campos de hora (fecha + hora de inicio y de cierre)
+   =================================================================== */
+
+/* ---------- 1) ADMINISTRADOR: "PRUEBAS CREADAS" + BOTÓN PROMEDIO ---------- */
+
+/* Fila de arriba: la etiqueta ("24 grupos · 48 preguntas") a la izquierda
+   y el botón "Promedio" a la derecha. */
+.admin-cabecera {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.admin-cabecera .historial-etiqueta {
+    margin-bottom: 0;
+}
+
+.btn-promedio {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-size: 0.9rem;
+    padding: 11px 28px;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(124, 77, 255, 0.3);
+}
+
+/* ---------- Ventana "Promedio para pasar de nivel" ---------- */
+.promedio-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 6px 0 16px;
+    text-align: left;
+}
+
+.promedio-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: #f4f2fb;
+    border: 2px solid #c9b8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.promedio-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1 1 160px;
+    min-width: 0;
+}
+
+.promedio-nivel {
+    color: #7c4dff;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.promedio-total {
+    color: #3a2e5c;
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+.promedio-nota {
+    color: #7a6ea3;
+    font-size: 0.75rem;
+    line-height: 1.35;
+}
+
+.promedio-campo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Le gana al estilo global de "input { width: 100% }" */
+.promedio-campo .promedio-input {
+    width: 84px;
+    padding: 10px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: #3a2e5c;
+}
+
+.promedio-campo .promedio-input:disabled {
+    background: #e5e2ee;
+    color: #a79fc2;
+    cursor: not-allowed;
+}
+
+.promedio-de {
+    color: #7a6ea3;
+    font-weight: 800;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* ---------- 2) ESTUDIANTE: mínimo para pasar de nivel (Puntaje actual) ---------- */
+.puntaje-minimo {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 12px;
+    color: #5b4a8f;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* ---------- 3) SUBIR PRUEBA: fecha y hora ---------- */
+/* Los campos de fecha y de hora comparten el mismo aspecto */
+.fechas-campos input[type="date"],
+.fechas-campos input[type="time"] {
+    width: 100%;
+    font-family: inherit;
+    font-weight: 700;
+    color: #3a2e5c;
+    cursor: pointer;
+}
+
+/* Un poco menos de espacio entre campos para que la ventana no sea tan larga */
+.fechas-campos {
+    gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .promedio-fila {
+        justify-content: center;
+        text-align: center;
+    }
+    .promedio-info {
+        flex-basis: 100%;
+        align-items: center;
+    }
+}
+/*PARTE ACTUALIZADA EL 21 XD
+/* ===================================================
+   SIN SELECCIÓN DE TEXTO
+   Los textos, botones y títulos ya no se pueden marcar
+   con el mouse (el azul de la captura). Los campos donde
+   se escribe siguen funcionando normal.
+   =================================================== */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Excepción: donde el usuario escribe sí se puede seleccionar */
+input,
+textarea,
+select,
+.ql-editor,
+[contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+.registros-tabla td {
+    -webkit-user-select: text;
+    user-select: text;
+}
+/* ---------- PRUEBAS ALMACENADAS (profesor) ---------- */
+#seccion-almacenadas {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-almacenar-prueba {
+    background: linear-gradient(135deg, #38c9f7, #0ea5e9);
+    color: #ffffff;
+    font-size: 0.85rem;
+    padding: 10px 24px;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(14, 165, 233, 0.3);
+}
+
+.btn-almacenar-prueba:disabled {
+    background: #c9c2e0;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}

@@ -1,1 +1,13 @@
 node_modules/
+.env
+*.db
+*.zip
+imagenes-profesores/*
+imagenes-preguntas/*
+imagenes-almacenadas/*
+!imagenes-profesores/.gitkeep
+!imagenes-preguntas/.gitkeep
+!imagenes-almacenadas/.gitkeep
+.DS_Store
+*.log
+npm-debug.log*
