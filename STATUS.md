@@ -87,11 +87,10 @@ sudo certbot --nginx -d programamega.com -d www.programamega.com
 - https://programamega.com
 - https://www.programamega.com
 
-## 🔐 Credenciales de prueba
+## 🔐 Acceso de prueba
 
-**Admin:** edialvarado@gmail.com / Edith1234*
-**Profesor:** amelialedes@gmail.com / Amelia123*
-**Estudiante:** amanda12@gmail.com / Amanda12*
+No guardar contraseñas ni códigos de acceso en este archivo. Configura o
+restablece las credenciales desde el panel administrativo de la aplicación.
 
 ## 📊 Estadísticas del proyecto
 
