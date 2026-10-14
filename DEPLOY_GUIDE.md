@@ -19,7 +19,8 @@ no lo usa esta aplicación.
 1. En EasyPanel, crea un servicio **App**.
 2. En **Source**, elige GitHub, repositorio `DanielPuin2025/PREICFESONLINE`,
    rama `main` y ruta de compilación `/`.
-3. Usa el builder Nixpacks o Railpack con Node.js 22. El comando de inicio es
+3. Usa el builder Nixpacks o Railpack con Node.js 22.x (el proyecto declara esta
+   versión en `package.json`). El comando de inicio es
    `npm start` y el puerto interno de la aplicación es `3000`.
 4. En **Environment**, define estas variables usando los valores de **Credentials**
    de MySQL (no las guardes en el repositorio):
