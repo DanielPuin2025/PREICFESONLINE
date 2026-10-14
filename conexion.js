@@ -17,7 +17,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use(express.static(__dirname));
 
 let db; // pool de conexiones a MySQL, se asigna en iniciarBaseDeDatos()
 
@@ -208,10 +207,17 @@ function estudianteEnGrados(gradoEstudiante, gradosPrueba) {
 // ===================================================
 // 🖼️ IMÁGENES DE LAS PREGUNTAS
 // ===================================================
-const CARPETA_IMAGENES = path.join(__dirname, 'imagenes-profesores');
-const CARPETA_IMAGENES_NIVELES = path.join(__dirname, 'imagenes-preguntas');
-const CARPETA_IMAGENES_ALMACENADAS = path.join(__dirname, 'imagenes-almacenadas');
-const CARPETA_IMAGENES_OPCIONES = path.join(__dirname, 'imagenes-opciones');
+const DATA_DIR = path.resolve(process.env.DATA_DIR || __dirname);
+const CARPETA_IMAGENES = path.join(DATA_DIR, 'imagenes-profesores');
+const CARPETA_IMAGENES_NIVELES = path.join(DATA_DIR, 'imagenes-preguntas');
+const CARPETA_IMAGENES_ALMACENADAS = path.join(DATA_DIR, 'imagenes-almacenadas');
+const CARPETA_IMAGENES_OPCIONES = path.join(DATA_DIR, 'imagenes-opciones');
+
+app.use('/imagenes-profesores', express.static(CARPETA_IMAGENES));
+app.use('/imagenes-preguntas', express.static(CARPETA_IMAGENES_NIVELES));
+app.use('/imagenes-almacenadas', express.static(CARPETA_IMAGENES_ALMACENADAS));
+app.use('/imagenes-opciones', express.static(CARPETA_IMAGENES_OPCIONES));
+app.use(express.static(__dirname));
 
 async function copiarImagenAlmacenada(ruta) {
     if (!ruta) return null;

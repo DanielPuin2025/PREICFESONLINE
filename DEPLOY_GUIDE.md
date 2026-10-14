@@ -1,5 +1,60 @@
 # 🚀 GUÍA RÁPIDA DE DESPLIEGUE - programamega.com
 
+## Despliegue recomendado con EasyPanel
+
+### 1. Crear MySQL
+
+En el mismo proyecto de EasyPanel, crea un servicio **MySQL** con la base de datos
+`preicfes`. No expongas el puerto de MySQL a Internet. En **Credentials**, copia
+el host interno, el usuario, la contraseña y el nombre de la base.
+
+Si vas a conservar los registros de tu MySQL local, impórtalos mediante
+phpMyAdmin/DbGate habilitado desde el servicio MySQL. El archivo local
+`preicfes.sql` contiene datos y está excluido de GitHub; no lo reemplaces por
+`database/preicfes.sql`, que solo conserva el esquema. `preicfes.db` es SQLite y
+no lo usa esta aplicación.
+
+### 2. Crear la aplicación desde GitHub
+
+1. En EasyPanel, crea un servicio **App**.
+2. En **Source**, elige GitHub, repositorio `DanielPuin2025/PREICFESONLINE`,
+   rama `main` y ruta de compilación `/`.
+3. Usa el builder Nixpacks o Railpack con Node.js 22. El comando de inicio es
+   `npm start` y el puerto interno de la aplicación es `3000`.
+4. En **Environment**, define estas variables usando los valores de **Credentials**
+   de MySQL (no las guardes en el repositorio):
+
+   ```env
+   NODE_ENV=production
+   PORT=3000
+   DB_HOST=<host-interno-mysql>
+   DB_USER=<usuario-mysql>
+   DB_PASSWORD=<password-mysql>
+   DB_NAME=preicfes
+   DATA_DIR=/data
+   ```
+
+5. En almacenamiento persistente de la App, monta un volumen en `/data`. Allí
+   se guardarán las imágenes que suban profesores y administradores, incluso
+   después de volver a desplegar.
+6. Pulsa **Deploy** y revisa los logs. La aplicación crea las tablas que falten
+   al iniciar; la cuenta MySQL debe tener permisos sobre `preicfes`.
+
+### 3. Conectar `programamega.com`
+
+1. En **Domains** de la App, añade `programamega.com` y
+   `www.programamega.com`, ambos dirigidos al puerto `3000`.
+2. En el proveedor DNS del dominio, crea registros `A` para `@` y `www` que
+   apunten a la IP pública del VPS.
+3. Espera a que el DNS resuelva al VPS y activa/solicita HTTPS desde EasyPanel.
+4. Comprueba `https://programamega.com` y `https://www.programamega.com`, luego
+   revisa los logs de la App y MySQL en EasyPanel.
+
+Activa Auto Deploy en EasyPanel si quieres que los próximos cambios publicados
+en la rama `main` vuelvan a desplegarse automáticamente.
+
+## Despliegue manual en Ubuntu sin EasyPanel
+
 ## ⚡ Paso a Paso (Copiar y pegar)
 
 ### 1️⃣ Conectarse al VPS
