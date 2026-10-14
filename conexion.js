@@ -1253,7 +1253,7 @@ app.get('/api/preguntas', async (req, res) => {
     const { nivel, sesion, materia, correo } = req.query;
     const prueba = numeroPrueba(req.query.prueba);
     console.log(`\n📝 [Preguntas] nivel: ${nivel}, prueba: ${prueba}, sesión: ${sesion}, materia: ${materia}`);
-    
+
     if (!nivel || !sesion || !materia) {
         return res.status(400).json({ error: 'Faltan parámetros: nivel, sesion y materia son obligatorios.' });
     }
