@@ -1,0 +1,366 @@
+/* ===================================================================
+   editor-seguro.css  (va DESPUÉS de estilos.css en index.html)
+   1) Editor de texto enriquecido (Quill) dentro de "Crear prueba"
+   2) Texto con formato en las preguntas (negritas, x², listas...)
+   3) Modo examen seguro: sin selección, escudo oscuro y sin impresión
+   =================================================================== */
+
+/* ---------- 1) EDITOR QUILL ---------- */
+.cp-rico {
+    background: #ffffff;
+    border: 1px solid #c9b8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: left;
+}
+
+.cp-rico:focus-within {
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.3);
+}
+
+.cp-rico .ql-toolbar.ql-snow {
+    border: none;
+    border-bottom: 1px solid #e5defa;
+    background: #f4f2fb;
+    padding: 6px 8px;
+}
+
+.cp-rico .ql-container.ql-snow {
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #3a2e5c;
+}
+
+.cp-rico-enunciado .ql-editor {
+    min-height: 120px;
+    padding: 12px 14px;
+}
+
+.cp-rico-opcion .ql-editor {
+    min-height: 44px;
+    padding: 10px 14px;
+}
+
+.cp-rico .ql-editor.ql-blank::before {
+    color: #9f92c2;
+    font-style: normal;
+}
+
+/* Los botones globales (button { padding: 15px; ... }) no deben agrandar la barra de Quill */
+.cp-rico .ql-toolbar button {
+    padding: 3px 5px;
+    width: 28px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: inherit;
+}
+
+.cp-rico .ql-toolbar button:hover {
+    transform: none;
+    background: #e5defa;
+}
+
+/* No se usan enlaces: se oculta el cuadro emergente de Quill */
+.cp-rico .ql-tooltip {
+    display: none !important;
+}
+
+/* La respuesta correcta escrita (modo aleatorio) se distingue en verde */
+.cp-rico-correcta {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.cp-rico-correcta .ql-editor {
+    font-weight: 700;
+}
+
+/* Opciones: un poco de aire entre los editores */
+.cp-modo-letra .cp-rico,
+.cp-modo-aleatoria .cp-rico {
+    margin-bottom: 0;
+}
+
+/* ---------- 2) TEXTO CON FORMATO EN LAS PREGUNTAS ---------- */
+.prueba-enunciado p,
+.detalle-pregunta-enunciado p {
+    margin: 0 0 0.6em;
+}
+
+.prueba-enunciado p:last-child,
+.detalle-pregunta-enunciado p:last-child {
+    margin-bottom: 0;
+}
+
+.prueba-enunciado ul,
+.prueba-enunciado ol,
+.detalle-pregunta-enunciado ul,
+.detalle-pregunta-enunciado ol {
+    margin: 0 0 0.6em;
+    padding-left: 1.5em;
+}
+
+.prueba-opcion-texto p {
+    margin: 0;
+}
+
+.prueba-opcion-texto {
+    overflow-wrap: anywhere;
+}
+
+/* En el detalle del historial, la letra y el texto quedan en la misma línea */
+.detalle-opcion p {
+    display: inline;
+    margin: 0;
+}
+
+.prueba-enunciado sup,
+.prueba-opcion-texto sup,
+.detalle-pregunta-enunciado sup,
+.detalle-opcion sup,
+.prueba-enunciado sub,
+.prueba-opcion-texto sub,
+.detalle-pregunta-enunciado sub,
+.detalle-opcion sub {
+    font-size: 0.75em;
+    line-height: 0;
+}
+
+/* ---------- 3) MODO EXAMEN SEGURO ---------- */
+
+/* No se puede seleccionar ni arrastrar nada durante el examen */
+body.modo-examen,
+body.modo-examen * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Escudo: oscurece y desenfoca TODO lo que hay detrás cuando se detecta un intento de trampa */
+#escudo-examen {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(30px) brightness(0.15);
+    backdrop-filter: blur(30px) brightness(0.15);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#escudo-examen.activo {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Navegadores sin backdrop-filter: se tapa la pantalla con un fondo casi opaco */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    #escudo-examen {
+        background: rgba(0, 0, 0, 0.96);
+    }
+}
+
+.escudo-caja {
+    max-width: 420px;
+}
+
+.escudo-titulo {
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.escudo-motivo {
+    color: #ffd7d7;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Impresión / guardar como PDF: no sale nada del examen */
+@media print {
+    body.modo-examen {
+        display: none !important;
+    }
+}
+
+/* ---------- IMAGEN EN CADA OPCIÓN DE RESPUESTA ---------- */
+.cp-opcion-fila {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* El área de escritura es la referencia para centrar el botón "+".
+   (editor-seguro.js mueve el botón dentro de .ql-container con anclarBotonesMas) */
+.cp-rico-opcion .ql-container {
+    position: relative;
+}
+
+/* Botón "+" centrado verticalmente en el área donde se escribe la opción */
+.cp-opcion-agregar {
+    position: absolute;
+    top: 50%;
+    bottom: auto;
+    right: 10px;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 2px solid #a78bfa;
+    border-radius: 10px;
+    color: #7c4dff;
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.cp-opcion-agregar:hover {
+    background: #f4f0ff;
+    transform: translateY(-50%) scale(1.06);
+}
+
+.cp-opcion-agregar:focus-visible {
+    outline: 3px solid #a78bfa;
+    outline-offset: 2px;
+}
+
+/* Deja espacio para que el texto no quede debajo del "+" */
+.cp-rico-opcion .ql-editor {
+    padding-right: 54px;
+}
+
+.cp-opcion-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.cp-opcion-vista {
+    display: block;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Imagen de la opción vista por el estudiante y en el historial */
+.opcion-img {
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    margin-top: 6px;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.prueba-opcion-texto .opcion-img:first-child,
+.detalle-opcion .opcion-img:first-child {
+    margin-top: 0;
+}
+
+.detalle-opcion .opcion-img {
+    max-height: 160px;
+}
+
+/* ---------- "+" dibujado con CSS (centrado exacto) ---------- */
+.cp-opcion-agregar,
+.cp-imagen-agregar {
+    font-size: 0;          /* oculta el carácter "+" del HTML */
+    position: relative;
+}
+
+/* El de las opciones sigue anclado con position:absolute (más arriba en este archivo) */
+.cp-opcion-agregar {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+}
+
+.cp-opcion-agregar::before,
+.cp-opcion-agregar::after,
+.cp-imagen-agregar::before,
+.cp-imagen-agregar::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: currentColor;
+    border-radius: 2px;
+}
+
+/* Botón de cada opción: cruz de 14 px */
+.cp-opcion-agregar::before { width: 14px; height: 3px; }
+.cp-opcion-agregar::after  { width: 3px;  height: 14px; }
+
+/* Botón grande de la imagen del enunciado: cruz de 26 px */
+.cp-imagen-agregar::before { width: 26px; height: 4px; }
+.cp-imagen-agregar::after  { width: 4px;  height: 26px; }
+
+/* ---------- CASILLA "VA CON LA PREGUNTA ANTERIOR" ---------- */
+/* La barra: casilla pequeña a la izquierda y el texto ocupando todo el resto */
+.cp-con-anterior {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #5b4a8f;
+    cursor: pointer;
+}
+
+/* Más específico que "#form-crear-pregunta input" (estilos.css) para que NO se estire al 100% */
+#form-crear-pregunta .cp-con-anterior input.cp-con-anterior-check {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 20px;        /* tamaño fijo: queda en el cuadrito pequeño de la izquierda */
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    accent-color: #7c4dff;
+    cursor: pointer;
+}
+
+/* El texto ocupa el resto del ancho (el cuadro grande) */
+.cp-con-anterior span {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+    text-align: left;
+}
