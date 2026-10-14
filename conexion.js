@@ -915,7 +915,7 @@ async function iniciarBaseDeDatos() {
                 'Indican los pensamientos del personaje, no sus palabras en voz alta.',
                 'Representan un signo de admiración por la sorpresa del personaje al ser interrogado.',
                 'C',
-                '/gaturro-acentuacion.jpg',
+                '/public/images/gaturro-acentuacion.jpg',
                 '%tecnología avanza a pasos agigantados%'
             ]
         );
@@ -929,10 +929,21 @@ async function iniciarBaseDeDatos() {
     try {
         await db.query(
             `UPDATE banco_preguntas SET imagen = ? WHERE nivel = 'A' AND sesion = 1 AND materia = 'Lectura Crítica' AND enunciado LIKE ? AND (imagen IS NULL OR imagen = '')`,
-            ['/gaturro-acentuacion.jpg', '%círculos que aparecen sobre la cabeza%']
+            ['/public/images/gaturro-acentuacion.jpg', '%círculos que aparecen sobre la cabeza%']
         );
     } catch (err) {
         console.error('❌ Error al asignar la imagen de la pregunta de Gaturro:', err.message);
+    }
+
+    try {
+        await db.query(
+            `UPDATE banco_preguntas
+             SET imagen = ?
+             WHERE imagen = ?`,
+            ['/public/images/gaturro-acentuacion.jpg', '/gaturro-acentuacion.jpg']
+        );
+    } catch (err) {
+        console.error('❌ Error al actualizar la ruta de la imagen de Gaturro:', err.message);
     }
 
     try {
