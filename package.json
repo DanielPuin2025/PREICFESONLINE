@@ -1,13 +1,14 @@
 {
   "name": "pre-icfes_online",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Plataforma de preparación para exámenes Pre-ICFES con gestión de estudiantes, profesores y administradores",
+  "main": "conexion.js",
   "scripts": {
     "start": "node conexion.js",
+    "dev": "node conexion.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["icfes", "educación", "exámenes", "estudiantes"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

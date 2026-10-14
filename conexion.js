@@ -11,6 +11,12 @@ const sanitizeHtml = require('sanitize-html');
 const app = express();
 // Límite alto porque las imágenes de las pruebas viajan en base64
 app.use(express.json({ limit: '50mb' }));
+app.use((req, res, next) => {
+    if (/\.(?:db|sqlite|sql|zip)$/i.test(req.path)) {
+        return res.sendStatus(404);
+    }
+    next();
+});
 app.use(express.static(__dirname));
 
 let db; // pool de conexiones a MySQL, se asigna en iniciarBaseDeDatos()

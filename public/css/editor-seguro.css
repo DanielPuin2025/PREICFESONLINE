@@ -1,0 +1,197 @@
+/* ===================================================================
+   editor-seguro.css  (va DESPUÉS de estilos.css en index.html)
+   1) Editor de texto enriquecido (Quill) dentro de "Crear prueba"
+   2) Texto con formato en las preguntas (negritas, x², listas...)
+   3) Modo examen seguro: sin selección, escudo oscuro y sin impresión
+   =================================================================== */
+
+/* ---------- 1) EDITOR QUILL ---------- */
+.cp-rico {
+    background: #ffffff;
+    border: 1px solid #c9b8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: left;
+}
+
+.cp-rico:focus-within {
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.3);
+}
+
+.cp-rico .ql-toolbar.ql-snow {
+    border: none;
+    border-bottom: 1px solid #e5defa;
+    background: #f4f2fb;
+    padding: 6px 8px;
+}
+
+.cp-rico .ql-container.ql-snow {
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+    color: #3a2e5c;
+}
+
+.cp-rico-enunciado .ql-editor {
+    min-height: 120px;
+    padding: 12px 14px;
+}
+
+.cp-rico-opcion .ql-editor {
+    min-height: 44px;
+    padding: 10px 14px;
+}
+
+.cp-rico .ql-editor.ql-blank::before {
+    color: #9f92c2;
+    font-style: normal;
+}
+
+/* Los botones globales (button { padding: 15px; ... }) no deben agrandar la barra de Quill */
+.cp-rico .ql-toolbar button {
+    padding: 3px 5px;
+    width: 28px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: inherit;
+}
+
+.cp-rico .ql-toolbar button:hover {
+    transform: none;
+    background: #e5defa;
+}
+
+/* No se usan enlaces: se oculta el cuadro emergente de Quill */
+.cp-rico .ql-tooltip {
+    display: none !important;
+}
+
+/* La respuesta correcta escrita (modo aleatorio) se distingue en verde */
+.cp-rico-correcta {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.cp-rico-correcta .ql-editor {
+    font-weight: 700;
+}
+
+/* Opciones: un poco de aire entre los editores */
+.cp-modo-letra .cp-rico,
+.cp-modo-aleatoria .cp-rico {
+    margin-bottom: 0;
+}
+
+/* ---------- 2) TEXTO CON FORMATO EN LAS PREGUNTAS ---------- */
+.prueba-enunciado p,
+.detalle-pregunta-enunciado p {
+    margin: 0 0 0.6em;
+}
+
+.prueba-enunciado p:last-child,
+.detalle-pregunta-enunciado p:last-child {
+    margin-bottom: 0;
+}
+
+.prueba-enunciado ul,
+.prueba-enunciado ol,
+.detalle-pregunta-enunciado ul,
+.detalle-pregunta-enunciado ol {
+    margin: 0 0 0.6em;
+    padding-left: 1.5em;
+}
+
+.prueba-opcion-texto p {
+    margin: 0;
+}
+
+.prueba-opcion-texto {
+    overflow-wrap: anywhere;
+}
+
+/* En el detalle del historial, la letra y el texto quedan en la misma línea */
+.detalle-opcion p {
+    display: inline;
+    margin: 0;
+}
+
+.prueba-enunciado sup,
+.prueba-opcion-texto sup,
+.detalle-pregunta-enunciado sup,
+.detalle-opcion sup,
+.prueba-enunciado sub,
+.prueba-opcion-texto sub,
+.detalle-pregunta-enunciado sub,
+.detalle-opcion sub {
+    font-size: 0.75em;
+    line-height: 0;
+}
+
+/* ---------- 3) MODO EXAMEN SEGURO ---------- */
+
+/* No se puede seleccionar ni arrastrar nada durante el examen */
+body.modo-examen,
+body.modo-examen * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Escudo: oscurece y desenfoca TODO lo que hay detrás cuando se detecta un intento de trampa */
+#escudo-examen {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(30px) brightness(0.15);
+    backdrop-filter: blur(30px) brightness(0.15);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#escudo-examen.activo {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Navegadores sin backdrop-filter: se tapa la pantalla con un fondo casi opaco */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    #escudo-examen {
+        background: rgba(0, 0, 0, 0.96);
+    }
+}
+
+.escudo-caja {
+    max-width: 420px;
+}
+
+.escudo-titulo {
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.escudo-motivo {
+    color: #ffd7d7;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Impresión / guardar como PDF: no sale nada del examen */
+@media print {
+    body.modo-examen {
+        display: none !important;
+    }
+}
