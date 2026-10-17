@@ -39,7 +39,9 @@ no lo usa esta aplicación.
    se guardarán las imágenes que suban profesores y administradores, incluso
    después de volver a desplegar.
 6. Pulsa **Deploy** y revisa los logs. La aplicación crea las tablas que falten
-   al iniciar; la cuenta MySQL debe tener permisos sobre `preicfes`.
+   al iniciar y añade `duracion_segundos` a `resultados` si hace falta; los
+   resultados anteriores se conservan con duración vacía. La cuenta MySQL debe
+   tener permisos para crear y alterar tablas en `preicfes`.
 
 ### 3. Conectar `programamega.com`
 

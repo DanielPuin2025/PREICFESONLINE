@@ -9,12 +9,15 @@ Plataforma de preparación para exámenes Pre-ICFES con gestión de estudiantes,
 - Creación de pruebas personalizadas
 - Editor de texto enriquecido para preguntas
 - Soporte de imágenes en preguntas
-- Sistema de resultados e historial
+- Preguntas de Inglés de 3 o 4 opciones y emparejamiento con banco de palabras
+- Temporizador por sesión e historial con duración y revisión de respuestas
+- Interfaz móvil y navegación del historial con los botones del navegador
+- Sistema de resultados, aprobación por nivel y ranking
 - Modo examen seguro
 
 ## 📋 Requisitos
 
-- Node.js 14+ 
+- Node.js 22.x
 - MySQL 5.7+
 - npm o yarn
 
@@ -24,6 +27,11 @@ Plataforma de preparación para exámenes Pre-ICFES con gestión de estudiantes,
 PRE-ICFES_ONLINE/
 ├── conexion.js              # Servidor Express y API
 ├── index.html               # Frontend principal
+├── script.js                # Lógica de la aplicación
+├── estilos.css              # Estilos principales
+├── movil.css                # Ajustes para celulares y tabletas
+├── editor-seguro.js         # Editor y protecciones del modo examen
+├── navegacion-historial.js  # Navegación atrás/adelante del navegador
 ├── server.js                # Archivo de inicio
 ├── package.json             # Dependencias
 ├── .env.example             # Ejemplo de configuración

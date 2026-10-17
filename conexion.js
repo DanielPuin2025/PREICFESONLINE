@@ -77,16 +77,29 @@ function textoPlano(html) {
 // ===================================================
 // 📅 FECHAS Y HORAS DE LAS PRUEBAS DE PROFESORES
 // ===================================================
+const ZONA_HORARIA = 'America/Bogota';
+
+function partesAhora() {
+    const partes = new Intl.DateTimeFormat('en-CA', {
+        timeZone: ZONA_HORARIA,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+        hourCycle: 'h23'
+    }).formatToParts(new Date());
+
+    const resultado = {};
+    partes.forEach(parte => { resultado[parte.type] = parte.value; });
+    return resultado;
+}
+
 function hoyLocal() {
-    const d = new Date();
-    const dos = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+    const ahora = partesAhora();
+    return `${ahora.year}-${ahora.month}-${ahora.day}`;
 }
 
 function ahoraLocal() {
-    const d = new Date();
-    const dos = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())} ${dos(d.getHours())}:${dos(d.getMinutes())}`;
+    const ahora = partesAhora();
+    return `${ahora.year}-${ahora.month}-${ahora.day} ${ahora.hour}:${ahora.minute}`;
 }
 
 function esFechaValida(texto) {
@@ -152,6 +165,9 @@ const MATERIAS_POR_SESION = {
 
 const MAX_LARGO_OPCION = 5000;
 const LETRAS_CURSO = ['A', 'B', 'C'];
+const LETRAS_BANCO = 'ABCDEFGH';
+const PREFIJO_BANCO = 'BANCO::';
+const LETRAS_RESPUESTA = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 function normalizarGrados(lista) {
     if (!Array.isArray(lista)) return [];
@@ -553,8 +569,17 @@ async function iniciarBaseDeDatos() {
         intento INT NOT NULL DEFAULT 1,
         correctas INT NOT NULL,
         total INT NOT NULL,
+        duracion_segundos INT DEFAULT NULL,
         fecha VARCHAR(50) NOT NULL
     )`);
+
+    try {
+        await db.query('ALTER TABLE resultados ADD COLUMN duracion_segundos INT DEFAULT NULL');
+    } catch (err) {
+        if (err.code !== 'ER_DUP_FIELDNAME') {
+            throw err;
+        }
+    }
 
     try {
         await db.query('ALTER TABLE resultados ADD COLUMN intento INT NOT NULL DEFAULT 1');
@@ -767,7 +792,7 @@ async function iniciarBaseDeDatos() {
         respondido_por VARCHAR(255) DEFAULT NULL
     )`);
 
-    // Mínimo de respuestas correctas (sumando las 2 sesiones) para pasar de nivel
+    // Mínimo de respuestas correctas sumando todas las pruebas del nivel.
     await db.query(`CREATE TABLE IF NOT EXISTS config_niveles (
         nivel VARCHAR(5) NOT NULL PRIMARY KEY,
         minimo_correctas INT NOT NULL
@@ -1868,14 +1893,51 @@ function prepararPreguntaAdmin(p) {
     if (!p || typeof p !== 'object') return { error: 'Una de las preguntas no es válida.' };
 
     const enunciado = limpiarHtmlRico(p.enunciado);
-    if (!textoPlano(enunciado)) return { error: 'Todas las preguntas necesitan enunciado.' };
+    if (!textoPlano(enunciado)) {
+        return { error: 'Todas las preguntas necesitan enunciado (en el emparejamiento, todas las frases).' };
+    }
+
+    if (p.tipo === 'banco') {
+        const banco = Array.isArray(p.banco)
+            ? p.banco.map(w => String(w === null || w === undefined ? '' : w).replace(/[<>]/g, '').trim())
+            : [];
+
+        if (banco.length < 2 || banco.length > 8 || banco.some(w => !w)) {
+            return { error: 'El banco necesita entre 2 y 8 palabras, todas con texto.' };
+        }
+        if (banco.some(w => w.length > 100)) {
+            return { error: 'Una palabra del banco es demasiado larga (máximo 100 caracteres).' };
+        }
+        if (new Set(banco.map(w => w.toLowerCase())).size < banco.length) {
+            return { error: 'Las palabras del banco deben ser distintas entre sí.' };
+        }
+        if (!p.respuesta_correcta || !LETRAS_BANCO.slice(0, banco.length).includes(p.respuesta_correcta)) {
+            return { error: 'Elige la letra correcta de cada frase del emparejamiento.' };
+        }
+
+        return {
+            pregunta: {
+                enunciado,
+                opcion_a: PREFIJO_BANCO + JSON.stringify(banco),
+                opcion_b: '',
+                opcion_c: '',
+                opcion_d: '',
+                respuesta_correcta: p.respuesta_correcta,
+                imagenes: [null, null, null, null],
+                aleatoria: 0,
+                con_anterior: p.con_anterior ? 1 : 0
+            }
+        };
+    }
 
     const io = (p.imagenes_opciones && typeof p.imagenes_opciones === 'object') ? p.imagenes_opciones : {};
+    const esTres = p.tipo === 'tres';
+    const cantidad = esTres ? 3 : 4;
     let textos;
     let imgs;
     let correcta;
 
-    if (p.modo === 'aleatoria') {
+    if (p.modo === 'aleatoria' && !esTres) {
         const textoCorrecta = limpiarHtmlRico(p.texto_correcta);
         const incorrectas = Array.isArray(p.incorrectas) ? p.incorrectas.map(limpiarHtmlRico) : [];
         const imgCorrecta = imagenOpcionCruda(io.texto_correcta);
@@ -1895,10 +1957,15 @@ function prepararPreguntaAdmin(p) {
         imgs = mezcladas.map(m => m.img);
         correcta = 'ABCD'[mezcladas.findIndex(m => m.ok)];
     } else {
-        textos = [p.opcion_a, p.opcion_b, p.opcion_c, p.opcion_d].map(limpiarHtmlRico);
-        imgs = [io.a, io.b, io.c, io.d].map(imagenOpcionCruda);
-        if (textos.some((t, i) => !textoPlano(t) && !imgs[i]) || !['A', 'B', 'C', 'D'].includes(p.respuesta_correcta)) {
-            return { error: 'Todas las preguntas necesitan 4 opciones (con texto o imagen) y una respuesta correcta (A, B, C o D).' };
+        textos = [p.opcion_a, p.opcion_b, p.opcion_c, esTres ? '' : p.opcion_d].map(limpiarHtmlRico);
+        imgs = [io.a, io.b, io.c, esTres ? null : io.d].map(imagenOpcionCruda);
+        const faltaAlguna = textos.slice(0, cantidad).some((t, i) => !textoPlano(t) && !imgs[i]);
+        if (faltaAlguna || !p.respuesta_correcta || !'ABCD'.slice(0, cantidad).includes(p.respuesta_correcta)) {
+            return {
+                error: esTres
+                    ? 'Las preguntas de 3 opciones necesitan las opciones A, B y C (con texto o imagen) y una respuesta correcta (A, B o C).'
+                    : 'Todas las preguntas necesitan 4 opciones (con texto o imagen) y una respuesta correcta (A, B, C o D).'
+            };
         }
         correcta = p.respuesta_correcta;
     }
@@ -1906,8 +1973,9 @@ function prepararPreguntaAdmin(p) {
     if (textos.some(t => t.length > MAX_LARGO_OPCION)) {
         return { error: 'Cada opción es demasiado larga (máximo ' + MAX_LARGO_OPCION + ' caracteres contando el formato).' };
     }
-    if (new Set(textos.map((t, i) => t.toLowerCase() + '|' + (imgs[i] || ''))).size < 4) {
-        return { error: 'Las 4 opciones de cada pregunta deben ser distintas entre sí.' };
+    const claves = textos.slice(0, cantidad).map((t, i) => t.toLowerCase() + '|' + (imgs[i] || ''));
+    if (new Set(claves).size < cantidad) {
+        return { error: 'Las opciones de cada pregunta deben ser distintas entre sí.' };
     }
 
     return {
@@ -1920,7 +1988,7 @@ function prepararPreguntaAdmin(p) {
             respuesta_correcta: correcta,
             imagenes: imgs,
             // 1 = al repetir la prueba, las opciones se reordenan para el estudiante
-            aleatoria: p.modo === 'aleatoria' ? 1 : 0,
+            aleatoria: (p.modo === 'aleatoria' && !esTres) ? 1 : 0,
             // 1 = la pregunta depende del texto de la anterior: al barajar se queda pegada a ella
             con_anterior: p.con_anterior ? 1 : 0
         }
@@ -2222,10 +2290,10 @@ const PASOS_DE_NIVEL = [
 
 async function totalPreguntasNivel(nivel) {
     const [filas] = await db.query(
-        'SELECT COUNT(*) AS total FROM banco_preguntas WHERE nivel = ? GROUP BY prueba',
+        'SELECT COUNT(*) AS total FROM banco_preguntas WHERE nivel = ?',
         [nivel]
     );
-    return filas.reduce((max, f) => Math.max(max, Number(f.total)), 0);
+    return Number(filas[0].total);
 }
 
 app.get('/api/admin/promedio', async (req, res) => {
@@ -3389,238 +3457,180 @@ app.delete('/api/pqrs/:id', async (req, res) => {
     }
 });
 
-// ===================================================
-// ✅ CALIFICAR Y RESULTADOS DE LOS NIVELES (por prueba)
-// ===================================================
-app.post('/api/calificar', async (req, res) => {
-    const { respuestas, correo, nombre, nivel, sesion } = req.body;
-    const prueba = numeroPrueba(req.body.prueba);
-    console.log(`\n✅ [Calificar] ${nombre} (${correo}) - Nivel ${nivel}, Prueba ${prueba}, Sesión ${sesion} - ${respuestas ? respuestas.length : 0} respuestas.`);
+// ===================================================================
+// 🎯 RESULTADOS DE LOS NIVELES (calificar, historial, aprobación, ranking)
+//
+// Estas rutas guardan y devuelven "duracion_segundos" (el tiempo que
+// tardó el estudiante en cada sesión).
+// ===================================================================
 
-    if (!Array.isArray(respuestas) || respuestas.length === 0) {
-        return res.status(400).json({ error: 'No se recibieron respuestas para calificar.' });
-    }
+// Convierte lo que manda el navegador en segundos válidos (o null si no hay dato).
+function limpiarDuracion(valor) {
+    if (valor === null || valor === undefined || valor === '') return null;
+    const n = Math.round(Number(valor));
+    if (!Number.isFinite(n) || n < 0) return null;
+    return Math.min(n, 86400); // máximo 24 horas
+}
 
-    try {
-        let intentoActual = 1;
+// ¿El estudiante ya presentó esa sesión en su intento actual?
+async function sesionYaPresentada(correo, nivel, prueba, sesion) {
+    const intento = await obtenerIntentoActual(correo, nivel, prueba);
+    const [filas] = await db.query(
+        'SELECT id FROM resultados WHERE correo = ? AND nivel = ? AND prueba = ? AND sesion = ? AND intento = ? LIMIT 1',
+        [correo, nivel, prueba, Number(sesion), intento]
+    );
+    return filas.length > 0;
+}
 
-        if (correo && nivel && sesion) {
-            intentoActual = await obtenerIntentoActual(correo, nivel, prueba);
-            const [yaExiste] = await db.query(
-                'SELECT id FROM resultados WHERE correo = ? AND nivel = ? AND prueba = ? AND sesion = ? AND intento = ?',
-                [correo, nivel, prueba, sesion, intentoActual]
-            );
-            if (yaExiste.length > 0) {
-                console.log(`⛔ [Calificar] ${correo} ya había presentado la Sesión ${sesion} del Nivel ${nivel} · Prueba ${prueba} (intento ${intentoActual}).`);
-                return res.status(409).json({
-                    error: 'Ya presentaste esta sesión. Usa "Repetir prueba" si quieres intentarlo de nuevo.'
-                });
-            }
-        }
-
-        const ids = respuestas.map(r => r.pregunta_id);
-        const placeholders = ids.map(() => '?').join(',');
-        const [filas] = await db.query(
-            `SELECT id, materia, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, imagen, aleatoria
-             FROM banco_preguntas WHERE id IN (${placeholders})`,
-            ids
-        );
-
-        // Mismo reordenamiento que vio el estudiante en /api/preguntas
-        const infoPorId = {};
-        filas.forEach(f => { infoPorId[f.id] = aplicarAleatoriedad(f, correo, intentoActual); });
-
-        let correctas = 0;
-        respuestas.forEach(r => {
-            const info = infoPorId[r.pregunta_id];
-            if (info && info.respuesta_correcta === r.opcion_elegida) correctas++;
-        });
-
-        const total = respuestas.length;
-        console.log(`🎯 Resultado: ${correctas}/${total} correctas.`);
-
-        if (correo && nombre && nivel && sesion) {
-            const fecha = new Date().toISOString();
-            const [insertResult] = await db.query(
-                `INSERT INTO resultados (correo, nombre, nivel, prueba, sesion, intento, correctas, total, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [correo, nombre, nivel, prueba, sesion, intentoActual, correctas, total, fecha]
-            );
-            const resultadoId = insertResult.insertId;
-            console.log(`💾 Resultado guardado (prueba ${prueba}, intento ${intentoActual}, id ${resultadoId}).`);
-
-            const filasDetalle = respuestas
-                .map(r => {
-                    const info = infoPorId[r.pregunta_id];
-                    if (!info) return null;
-                    const esCorrecta = info.respuesta_correcta === r.opcion_elegida ? 1 : 0;
-                    return [
-                        resultadoId, r.pregunta_id, info.materia, info.enunciado,
-                        info.opcion_a, info.opcion_b, info.opcion_c, info.opcion_d,
-                        r.opcion_elegida, info.respuesta_correcta, esCorrecta, info.imagen || null
-                    ];
-                })
-                .filter(Boolean);
-
-            if (filasDetalle.length > 0) {
-                await db.query(
-                    `INSERT INTO respuestas_detalle (resultado_id, pregunta_id, materia, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, opcion_elegida, respuesta_correcta, es_correcta, imagen) VALUES ?`,
-                    [filasDetalle]
-                );
-            }
-        } else {
-            console.log("⚠️ No se guardó el resultado: faltan correo, nombre, nivel o sesión en la petición.");
-        }
-
-        res.json({ correctas, total });
-    } catch (err) {
-        console.error("❌ Error al calificar:", err.message);
-        res.status(500).json({ error: 'Error interno al calificar.' });
-    }
-});
-
-app.get('/api/sesion-completada', async (req, res) => {
-    const { correo, nivel, sesion } = req.query;
-    const prueba = numeroPrueba(req.query.prueba);
-
-    if (!correo || !nivel || !sesion) {
-        return res.status(400).json({ error: 'Faltan parámetros: correo, nivel y sesion son obligatorios.' });
-    }
-
-    try {
-        const intentoActual = await obtenerIntentoActual(correo, nivel, prueba);
-        const [filas] = await db.query(
-            `SELECT COUNT(*) AS total FROM resultados WHERE correo = ? AND nivel = ? AND prueba = ? AND sesion = ? AND intento = ?`,
-            [correo, nivel, prueba, sesion, intentoActual]
-        );
-        res.json({ completada: filas[0].total > 0 });
-    } catch (err) {
-        console.error("❌ Error al verificar sesión completada:", err.message);
-        res.status(500).json({ error: 'Error interno al verificar la sesión.' });
-    }
-});
-
-async function obtenerMinimoNivel(nivel, totalPreguntas) {
-    const [filas] = await db.query('SELECT minimo_correctas FROM config_niveles WHERE nivel = ?', [nivel]);
-    if (filas.length > 0) {
-        return Math.min(Number(filas[0].minimo_correctas), totalPreguntas);
-    }
+// Mínimo de respuestas correctas para aprobar: el que fijó el administrador con el
+// botón "Promedio" o, si no hay ninguno, el 60% del total de preguntas del nivel.
+async function minimoParaAprobar(nivel, totalPreguntas) {
+    const [config] = await db.query('SELECT minimo_correctas FROM config_niveles WHERE nivel = ?', [nivel]);
+    if (config.length > 0) return Number(config[0].minimo_correctas);
     return Math.ceil((totalPreguntas * Math.round(UMBRAL_APROBACION * 100)) / 100);
 }
 
-// Estado de un estudiante en UNA prueba de un nivel (intento actual, ambas sesiones)
-async function evaluarNivelPrueba(correo, nivel, prueba) {
-    const intentoActual = await obtenerIntentoActual(correo, nivel, prueba);
+// Agrupa los resultados por (prueba, intento). Si una sesión se repitió dentro del mismo
+// intento, se queda con la más reciente.
+function agruparPorIntento(filas) {
+    const grupos = new Map();
+    for (const f of filas) {
+        const clave = f.prueba + '|' + f.intento;
+        if (!grupos.has(clave)) {
+            grupos.set(clave, { prueba: Number(f.prueba), intento: Number(f.intento), sesiones: {} });
+        }
+        grupos.get(clave).sesiones[Number(f.sesion)] = f;
+    }
+    return [...grupos.values()];
+}
 
-    const [filas] = await db.query(
-        `SELECT r.sesion, r.correctas, r.total
-         FROM resultados r
-         WHERE r.correo = ? AND r.nivel = ? AND r.prueba = ? AND r.intento = ?
-           AND r.id = (
-               SELECT MAX(r2.id) FROM resultados r2
-               WHERE r2.correo = r.correo AND r2.nivel = r.nivel AND r2.prueba = r.prueba
-                 AND r2.intento = r.intento AND r2.sesion = r.sesion
-           )
-         ORDER BY r.sesion`,
-        [correo, nivel, prueba, intentoActual]
-    );
-
-    const totalCorrectas = filas.reduce((acc, f) => acc + Number(f.correctas), 0);
-    const totalPreguntas = filas.reduce((acc, f) => acc + Number(f.total), 0);
-    const tieneIntento = totalPreguntas > 0;
-    const porcentaje = tieneIntento ? totalCorrectas / totalPreguntas : 0;
-
-    const ambasSesiones = filas.some(f => Number(f.sesion) === 1) && filas.some(f => Number(f.sesion) === 2);
-    const minimoCorrectas = await obtenerMinimoNivel(nivel, totalPreguntas);
-    const aprobado = tieneIntento && ambasSesiones && totalCorrectas >= minimoCorrectas;
-
+// Un grupo está completo cuando tiene la sesión 1 y la sesión 2.
+function totalesDeGrupo(grupo) {
+    const sesiones = [grupo.sesiones[1], grupo.sesiones[2]].filter(Boolean);
     return {
-        prueba,
-        tieneIntento,
-        aprobado,
-        porcentaje,
-        totalCorrectas,
-        totalPreguntas,
-        minimoCorrectas,
-        sesiones: filas.map(f => ({
-            sesion: f.sesion,
-            correctas: Number(f.correctas),
-            total: Number(f.total)
-        }))
+        completo: !!(grupo.sesiones[1] && grupo.sesiones[2]),
+        correctas: sesiones.reduce((a, s) => a + Number(s.correctas), 0),
+        total: sesiones.reduce((a, s) => a + Number(s.total), 0)
     };
 }
 
-// Con ?prueba=N evalúa esa prueba. Sin prueba, el nivel cuenta como aprobado
-// si el estudiante aprobó CUALQUIERA de sus pruebas.
-app.get('/api/nivel-aprobado', async (req, res) => {
-    const { correo, nivel } = req.query;
-
-    if (!correo || !nivel) {
-        return res.status(400).json({ error: 'Faltan parámetros: correo y nivel son obligatorios.' });
-    }
-
-    try {
-        if (req.query.prueba) {
-            return res.json(await evaluarNivelPrueba(correo, nivel, numeroPrueba(req.query.prueba)));
-        }
-
-        const evaluaciones = [];
-        for (const p of PRUEBAS_VALIDAS) {
-            evaluaciones.push(await evaluarNivelPrueba(correo, nivel, p));
-        }
-        const elegida = evaluaciones.find(e => e.aprobado)
-            || evaluaciones.find(e => e.tieneIntento)
-            || evaluaciones[0];
-
-        res.json({ ...elegida, aprobado: evaluaciones.some(e => e.aprobado) });
-    } catch (err) {
-        console.error("❌ Error al verificar aprobación del nivel:", err.message);
-        res.status(500).json({ error: 'Error interno al verificar la aprobación del nivel.' });
-    }
-});
-
-app.post('/api/repetir-nivel', async (req, res) => {
-    const { correo, nivel } = req.body;
+// Califica una sesión y guarda el resultado, el detalle y el tiempo que tardó.
+app.post('/api/calificar', async (req, res) => {
+    const { correo, nivel, respuestas } = req.body;
     const prueba = numeroPrueba(req.body.prueba);
-    console.log(`\n🔄 [Repetir] ${correo} quiere repetir el nivel ${nivel}, prueba ${prueba}.`);
+    const sesion = Number(req.body.sesion);
+    const duracion = limpiarDuracion(req.body.duracion_segundos);
 
-    if (!correo || !nivel) {
-        return res.status(400).json({ error: 'Faltan parámetros: correo y nivel son obligatorios.' });
+    if (!correo || !NIVELES_VALIDOS.includes(nivel) || ![1, 2].includes(sesion) || !Array.isArray(respuestas)) {
+        return res.status(400).json({ error: 'Faltan datos para calificar la sesión.' });
     }
 
+    let conexion;
     try {
-        await db.query(
-            `INSERT INTO intentos_nivel (correo, nivel, prueba, intento_actual) VALUES (?, ?, ?, 2)
-             ON DUPLICATE KEY UPDATE intento_actual = intento_actual + 1`,
-            [correo, nivel, prueba]
+        const [est] = await db.query('SELECT nombre FROM estudiantes WHERE correo = ?', [correo]);
+        if (est.length === 0) {
+            return res.status(403).json({ error: 'Solo los estudiantes pueden presentar estas pruebas.' });
+        }
+
+        if (await sesionYaPresentada(correo, nivel, prueba, sesion)) {
+            return res.status(409).json({ error: 'Ya presentaste esta sesión.' });
+        }
+        if (sesion === 2 && !(await sesionYaPresentada(correo, nivel, prueba, 1))) {
+            return res.status(403).json({ error: 'Primero debes presentar la Sesión 1.' });
+        }
+
+        const intento = await obtenerIntentoActual(correo, nivel, prueba);
+
+        const [preguntasBD] = await db.query(
+            `SELECT id, materia, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta, imagen, aleatoria
+             FROM banco_preguntas
+             WHERE nivel = ? AND prueba = ? AND sesion = ?
+             ORDER BY id`,
+            [nivel, prueba, sesion]
         );
-        res.json({ mensaje: 'Prueba reiniciada. La Sesión 2 quedó bloqueada nuevamente y puedes presentar la Sesión 1 desde cero.\nTu historial y tu puntaje actual anteriores NO se perdieron.' });
+        if (preguntasBD.length === 0) {
+            return res.status(404).json({ error: 'Esta sesión todavía no tiene preguntas.' });
+        }
+
+        // Se aceptan las letras A-H (el emparejamiento usa hasta 8)
+        const elegidas = {};
+        respuestas.forEach(r => {
+            if (r && r.pregunta_id !== undefined) {
+                elegidas[Number(r.pregunta_id)] = LETRAS_RESPUESTA.includes(r.opcion_elegida) ? r.opcion_elegida : '';
+            }
+        });
+
+        // Las opciones se califican igual que como las vio el estudiante (con la aleatoriedad del intento)
+        const detalle = preguntasBD.map(f => {
+            const p = aplicarAleatoriedad(f, correo, intento);
+            const elegida = elegidas[p.id] || '';
+            return { p, elegida, esCorrecta: elegida !== '' && elegida === p.respuesta_correcta };
+        });
+
+        const correctas = detalle.filter(d => d.esCorrecta).length;
+        const total = detalle.length;
+
+        conexion = await db.getConnection();
+        await conexion.beginTransaction();
+
+        const [r] = await conexion.query(
+            `INSERT INTO resultados (correo, nombre, nivel, prueba, sesion, intento, correctas, total, fecha, duracion_segundos)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [correo, est[0].nombre, nivel, prueba, sesion, intento, correctas, total, new Date().toISOString(), duracion]
+        );
+
+        const filasDetalle = detalle.map(d => [
+            r.insertId, d.p.id, d.p.materia, d.p.enunciado,
+            d.p.opcion_a, d.p.opcion_b, d.p.opcion_c, d.p.opcion_d,
+            d.elegida, d.p.respuesta_correcta, d.esCorrecta ? 1 : 0, d.p.imagen || null
+        ]);
+        await conexion.query(
+            `INSERT INTO respuestas_detalle (resultado_id, pregunta_id, materia, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, opcion_elegida, respuesta_correcta, es_correcta, imagen) VALUES ?`,
+            [filasDetalle]
+        );
+
+        await conexion.commit();
+        console.log(`🎯 [Calificar] ${correo} · Nivel ${nivel} · Prueba ${prueba} · Sesión ${sesion} · intento ${intento}: ${correctas}/${total}` +
+            (duracion !== null ? ` en ${duracion} s` : ''));
+        res.json({ correctas, total, duracion_segundos: duracion });
     } catch (err) {
-        console.error("❌ Error al repetir nivel:", err.message);
-        res.status(500).json({ error: 'Error interno al repetir el nivel.' });
+        if (conexion) {
+            try {
+                await conexion.rollback();
+            } catch (rollbackError) {
+                console.error('❌ Error al revertir la calificación:', rollbackError.message);
+            }
+        }
+        console.error('❌ Error al calificar la sesión:', err.message);
+        res.status(500).json({ error: 'Error interno al calificar la sesión.' });
+    } finally {
+        if (conexion) conexion.release();
     }
 });
 
+// Historial del estudiante (lo más reciente primero). Incluye duracion_segundos.
 app.get('/api/mis-puntajes', async (req, res) => {
     const { correo } = req.query;
-    if (!correo) {
-        return res.status(400).json({ error: 'Falta el correo del estudiante.' });
-    }
+    if (!correo) return res.status(400).json({ error: 'Falta el correo del estudiante.' });
 
     try {
         const [filas] = await db.query(
-            `SELECT id, nivel, prueba, sesion, correctas, total, fecha FROM resultados WHERE correo = ? ORDER BY fecha DESC`,
+            `SELECT id, nivel, prueba, sesion, intento, correctas, total, fecha, duracion_segundos
+             FROM resultados
+             WHERE correo = ?
+             ORDER BY id DESC`,
             [correo]
         );
         res.json({ puntajes: filas });
     } catch (err) {
-        console.error("❌ Error al obtener puntajes:", err.message);
-        res.status(500).json({ error: 'Error interno al obtener los puntajes.' });
+        console.error('❌ Error al obtener el historial de puntajes:', err.message);
+        res.status(500).json({ error: 'Error interno al obtener el historial.' });
     }
 });
-// "Eliminación múltiple" del historial: el estudiante borra solo SUS resultados
+
+// Eliminación múltiple del historial (el estudiante solo borra lo suyo).
 app.post('/api/mis-puntajes/eliminar', async (req, res) => {
     const { correo, ids } = req.body;
-
     if (!correo) return res.status(400).json({ error: 'Falta el correo del estudiante.' });
     if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: 'Selecciona al menos un resultado.' });
@@ -3637,27 +3647,23 @@ app.post('/api/mis-puntajes/eliminar', async (req, res) => {
             return res.status(403).json({ error: 'Solo los estudiantes pueden borrar su historial.' });
         }
 
-        // "AND correo = ?" garantiza que nadie borre resultados de otra persona.
-        // respuestas_detalle se borra sola (ON DELETE CASCADE).
+        // respuestas_detalle se borra sola (ON DELETE CASCADE)
         const [resultado] = await db.query(
             'DELETE FROM resultados WHERE id IN (?) AND correo = ?',
             [idsLimpios, correo]
         );
-
         console.log(`🗑️ [Historial] ${correo} eliminó ${resultado.affectedRows} resultado(s).`);
         res.json({ mensaje: 'Resultados eliminados.', eliminados: resultado.affectedRows });
     } catch (err) {
         console.error('❌ Error al eliminar el historial:', err.message);
-        res.status(500).json({ error: 'Error interno al eliminar el historial.' });
+        res.status(500).json({ error: 'Error interno al eliminar los resultados.' });
     }
 });
 
+// Menú ⋮ del historial: puntaje por materia de un resultado.
 app.get('/api/resultado-materias', async (req, res) => {
     const { resultado_id, correo } = req.query;
-
-    if (!resultado_id || !correo) {
-        return res.status(400).json({ error: 'Faltan parámetros: resultado_id y correo son obligatorios.' });
-    }
+    if (!resultado_id || !correo) return res.status(400).json({ error: 'Faltan parámetros.' });
 
     try {
         const [propietario] = await db.query('SELECT correo FROM resultados WHERE id = ?', [resultado_id]);
@@ -3666,22 +3672,26 @@ app.get('/api/resultado-materias', async (req, res) => {
         }
 
         const [filas] = await db.query(
-            `SELECT materia, SUM(es_correcta) AS correctas, COUNT(*) AS total FROM respuestas_detalle WHERE resultado_id = ? GROUP BY materia`,
+            `SELECT materia, SUM(es_correcta) AS correctas, COUNT(*) AS total
+             FROM respuestas_detalle
+             WHERE resultado_id = ?
+             GROUP BY materia
+             ORDER BY MIN(id)`,
             [resultado_id]
         );
-        res.json({ materias: filas });
+        res.json({
+            materias: filas.map(f => ({ materia: f.materia, correctas: Number(f.correctas), total: Number(f.total) }))
+        });
     } catch (err) {
-        console.error("❌ Error al obtener materias del resultado:", err.message);
+        console.error('❌ Error al obtener las materias del resultado:', err.message);
         res.status(500).json({ error: 'Error interno al obtener las materias.' });
     }
 });
 
+// Detalle pregunta por pregunta de una materia de un resultado.
 app.get('/api/resultado-preguntas', async (req, res) => {
     const { resultado_id, materia, correo } = req.query;
-
-    if (!resultado_id || !materia || !correo) {
-        return res.status(400).json({ error: 'Faltan parámetros: resultado_id, materia y correo son obligatorios.' });
-    }
+    if (!resultado_id || !materia || !correo) return res.status(400).json({ error: 'Faltan parámetros.' });
 
     try {
         const [propietario] = await db.query('SELECT correo FROM resultados WHERE id = ?', [resultado_id]);
@@ -3690,20 +3700,211 @@ app.get('/api/resultado-preguntas', async (req, res) => {
         }
 
         const [filas] = await db.query(
-            `SELECT pregunta_id, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, opcion_elegida, respuesta_correcta, es_correcta, imagen FROM respuestas_detalle WHERE resultado_id = ? AND materia = ? ORDER BY id`,
+            `SELECT pregunta_id, enunciado, opcion_a, opcion_b, opcion_c, opcion_d, opcion_elegida, respuesta_correcta, es_correcta, imagen
+             FROM respuestas_detalle
+             WHERE resultado_id = ? AND materia = ?
+             ORDER BY id`,
             [resultado_id, materia]
         );
-        res.json({ preguntas: filas });
+        res.json({ preguntas: filas.map(f => ({ ...f, es_correcta: !!f.es_correcta })) });
     } catch (err) {
-        console.error("❌ Error al obtener preguntas del resultado:", err.message);
+        console.error('❌ Error al obtener las preguntas del resultado:', err.message);
         res.status(500).json({ error: 'Error interno al obtener las preguntas.' });
     }
 });
 
+// ¿Ya presentó esa sesión (en su intento actual)? Define qué ventana de sesión se desbloquea.
+app.get('/api/sesion-completada', async (req, res) => {
+    const { correo, nivel, sesion } = req.query;
+    const prueba = numeroPrueba(req.query.prueba);
+    if (!correo || !NIVELES_VALIDOS.includes(nivel) || ![1, 2].includes(Number(sesion))) {
+        return res.status(400).json({ error: 'Faltan parámetros.' });
+    }
+
+    try {
+        res.set('Cache-Control', 'no-store');
+        res.json({ completada: await sesionYaPresentada(correo, nivel, prueba, sesion) });
+    } catch (err) {
+        console.error('❌ Error al verificar la sesión:', err.message);
+        res.status(500).json({ error: 'Error interno al verificar la sesión.' });
+    }
+});
+
+// "Repetir prueba": empieza un intento nuevo. El historial anterior se conserva.
+app.post('/api/repetir-nivel', async (req, res) => {
+    const { correo, nivel } = req.body;
+    const prueba = numeroPrueba(req.body.prueba);
+    if (!correo || !NIVELES_VALIDOS.includes(nivel)) {
+        return res.status(400).json({ error: 'Faltan datos para repetir la prueba.' });
+    }
+
+    try {
+        const s1 = await sesionYaPresentada(correo, nivel, prueba, 1);
+        const s2 = await sesionYaPresentada(correo, nivel, prueba, 2);
+        if (!s1 || !s2) {
+            return res.status(400).json({ error: 'Primero debes presentar las dos sesiones para poder repetir la prueba.' });
+        }
+
+        const intentoNuevo = (await obtenerIntentoActual(correo, nivel, prueba)) + 1;
+        await db.query(
+            `INSERT INTO intentos_nivel (correo, nivel, prueba, intento_actual) VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE intento_actual = VALUES(intento_actual)`,
+            [correo, nivel, prueba, intentoNuevo]
+        );
+
+        console.log(`🔄 [Repetir] ${correo} · Nivel ${nivel} · Prueba ${prueba} -> intento ${intentoNuevo}.`);
+        res.json({ mensaje: 'Listo. La Sesión 1 está disponible de nuevo y la Sesión 2 quedó bloqueada.', intento: intentoNuevo });
+    } catch (err) {
+        console.error('❌ Error al repetir la prueba:', err.message);
+        res.status(500).json({ error: 'Error interno al repetir la prueba.' });
+    }
+});
+
+// ¿Aprobó el nivel?
+// Se SUMAN las respuestas correctas de TODAS las pruebas del nivel (de cada prueba cuenta su
+// intento más reciente) y se comparan con el mínimo que fijó el administrador con "Promedio".
+// Siempre devuelve: aprobado, correctasNivel, totalNivel y minimoCorrectas.
+// Con "prueba" también devuelve las sesiones del intento más reciente de esa prueba.
+app.get('/api/nivel-aprobado', async (req, res) => {
+    const { correo, nivel } = req.query;
+    const pruebaPedida = req.query.prueba ? numeroPrueba(req.query.prueba) : null;
+    if (!correo || !NIVELES_VALIDOS.includes(nivel)) {
+        return res.status(400).json({ error: 'Faltan parámetros.' });
+    }
+
+    try {
+        const [filas] = await db.query(
+            `SELECT id, prueba, sesion, intento, correctas, total
+             FROM resultados
+             WHERE correo = ? AND nivel = ?
+             ORDER BY id`,
+            [correo, nivel]
+        );
+
+        const grupos = agruparPorIntento(filas);
+
+        // Suma de las correctas del nivel: intento más reciente de cada prueba
+        let correctasNivel = 0;
+        for (const numero of PRUEBAS_VALIDAS) {
+            const delaPrueba = grupos
+                .filter(g => g.prueba === numero)
+                .sort((a, b) => b.intento - a.intento);
+            if (delaPrueba.length === 0) continue;
+            correctasNivel += totalesDeGrupo(delaPrueba[0]).correctas;
+        }
+
+        const totalNivel = await totalPreguntasNivel(nivel);
+        const minimoCorrectas = totalNivel > 0 ? await minimoParaAprobar(nivel, totalNivel) : null;
+        const aprobado = minimoCorrectas !== null && correctasNivel >= minimoCorrectas;
+
+        const respuesta = { aprobado, correctasNivel, totalNivel, minimoCorrectas };
+
+        if (pruebaPedida) {
+            const ultimo = grupos
+                .filter(g => g.prueba === pruebaPedida)
+                .sort((a, b) => b.intento - a.intento)[0];
+            const sesiones = ultimo
+                ? [1, 2].filter(n => ultimo.sesiones[n]).map(n => ({
+                    sesion: n,
+                    correctas: Number(ultimo.sesiones[n].correctas),
+                    total: Number(ultimo.sesiones[n].total)
+                }))
+                : [];
+
+            respuesta.sesiones = sesiones;
+            respuesta.totalCorrectas = sesiones.reduce((a, s) => a + s.correctas, 0);
+            respuesta.totalPreguntas = sesiones.reduce((a, s) => a + s.total, 0);
+        }
+
+        res.set('Cache-Control', 'no-store');
+        res.json(respuesta);
+    } catch (err) {
+        console.error('❌ Error al verificar la aprobación del nivel:', err.message);
+        res.status(500).json({ error: 'Error interno al verificar el nivel.' });
+    }
+});
+
+// Ranking por nivel: solo estudiantes que presentaron las dos sesiones de las 3 pruebas.
+// De cada prueba cuenta el intento completo más reciente.
+// Puntaje global (1 a 500) = correctas de las 3 pruebas / total de preguntas de las 3 pruebas * 500.
+app.get('/api/ranking', async (req, res) => {
+    try {
+        const ranking = {};
+
+        for (const nivel of NIVELES_VALIDOS) {
+            const [filas] = await db.query(
+                `SELECT r.id, r.correo, r.prueba, r.sesion, r.intento, r.correctas, r.total, e.nombre, e.grado
+                 FROM resultados r
+                 JOIN estudiantes e ON e.correo = r.correo
+                 WHERE r.nivel = ?
+                 ORDER BY r.id`,
+                [nivel]
+            );
+
+            const porEstudiante = new Map();
+            for (const f of filas) {
+                if (!porEstudiante.has(f.correo)) {
+                    porEstudiante.set(f.correo, { nombre: f.nombre, grado: f.grado, filas: [] });
+                }
+                porEstudiante.get(f.correo).filas.push(f);
+            }
+
+            const lista = [];
+            for (const est of porEstudiante.values()) {
+                const grupos = agruparPorIntento(est.filas);
+                const pruebas = [];
+
+                for (const numero of PRUEBAS_VALIDAS) {
+                    const completos = grupos
+                        .filter(g => g.prueba === numero && totalesDeGrupo(g).completo)
+                        .sort((a, b) => b.intento - a.intento);
+                    if (completos.length === 0) break;
+
+                    const t = totalesDeGrupo(completos[0]);
+                    pruebas.push({ prueba: numero, correctas: t.correctas, total: t.total });
+                }
+
+                if (pruebas.length === PRUEBAS_VALIDAS.length) {
+                    const correctas = pruebas.reduce((a, p) => a + p.correctas, 0);
+                    const total = pruebas.reduce((a, p) => a + p.total, 0);
+                    const puntajeGlobal = total > 0
+                        ? Math.min(500, Math.max(1, Math.round((correctas / total) * 500)))
+                        : 1;
+
+                    lista.push({
+                        nombre: est.nombre,
+                        grado: est.grado,
+                        pruebas,
+                        correctas,
+                        total,
+                        porcentaje: total > 0 ? correctas / total : 0,
+                        puntaje: puntajeGlobal   // 1 a 500
+                    });
+                }
+            }
+
+            // Más puntaje global primero; si empatan, más correctas; luego por nombre
+            lista.sort((a, b) =>
+                b.puntaje - a.puntaje ||
+                b.correctas - a.correctas ||
+                String(a.nombre).localeCompare(String(b.nombre), 'es'));
+            ranking[nivel] = lista;
+        }
+
+        res.set('Cache-Control', 'no-store');
+        res.json({ ranking });
+    } catch (err) {
+        console.error('❌ Error al obtener el ranking:', err.message);
+        res.status(500).json({ error: 'Error interno al obtener el ranking.' });
+    }
+});
+
+// ===================================================
+
 app.get('/api/todos-los-resultados', async (req, res) => {
     try {
         const [filas] = await db.query(
-            `SELECT r.correo, r.nombre, r.nivel, r.prueba, r.sesion, r.correctas, r.total, r.fecha, e.grado
+            `SELECT r.correo, r.nombre, r.nivel, r.prueba, r.sesion, r.correctas, r.total, r.fecha, r.duracion_segundos, e.grado
              FROM resultados r
              LEFT JOIN estudiantes e ON e.correo = r.correo
              ORDER BY r.fecha DESC`
@@ -3715,97 +3916,6 @@ app.get('/api/todos-los-resultados', async (req, res) => {
     }
 });
 
-// Ranking por nivel: solo entran los estudiantes que presentaron las 3 pruebas
-// del nivel (con sus 2 sesiones cada una, en el intento actual). Se ordenan por
-// el total de correctas de las 3 pruebas.
-app.get('/api/ranking', async (req, res) => {
-    try {
-        const rankingPorNivel = {};
-
-        for (const nivel of NIVELES_VALIDOS) {
-            const [intentos] = await db.query(
-                'SELECT correo, prueba, intento_actual FROM intentos_nivel WHERE nivel = ?',
-                [nivel]
-            );
-            const intentoMap = {};
-            intentos.forEach(i => { intentoMap[i.correo + '|' + i.prueba] = i.intento_actual; });
-
-            const [filas] = await db.query(
-                `SELECT r.correo, r.nombre, r.prueba, r.sesion, r.intento, r.correctas, r.total, e.grado
-                 FROM resultados r
-                 INNER JOIN estudiantes e ON e.correo = r.correo
-                 WHERE r.nivel = ?
-                   AND r.id = (
-                       SELECT MAX(r2.id) FROM resultados r2
-                       WHERE r2.correo = r.correo AND r2.nivel = r.nivel AND r2.prueba = r.prueba
-                         AND r2.intento = r.intento AND r2.sesion = r.sesion
-                   )`,
-                [nivel]
-            );
-
-            // 1) Agrupa por (estudiante, prueba) usando solo el intento actual
-            const porEstudiantePrueba = {};
-            filas.forEach(f => {
-                const intentoActual = intentoMap[f.correo + '|' + f.prueba] || 1;
-                if (f.intento !== intentoActual) return;
-
-                const clave = f.correo + '|' + f.prueba;
-                if (!porEstudiantePrueba[clave]) {
-                    porEstudiantePrueba[clave] = {
-                        correo: f.correo,
-                        nombre: f.nombre,
-                        grado: f.grado,
-                        prueba: Number(f.prueba),
-                        sesiones: new Set(),
-                        correctas: 0,
-                        total: 0
-                    };
-                }
-                porEstudiantePrueba[clave].sesiones.add(f.sesion);
-                porEstudiantePrueba[clave].correctas += f.correctas;
-                porEstudiantePrueba[clave].total += f.total;
-            });
-
-            // 2) Junta las pruebas completas (sesiones 1 y 2) de cada estudiante
-            const porEstudiante = {};
-            Object.values(porEstudiantePrueba)
-                .filter(e => e.sesiones.has(1) && e.sesiones.has(2))
-                .forEach(e => {
-                    if (!porEstudiante[e.correo]) {
-                        porEstudiante[e.correo] = { nombre: e.nombre, grado: e.grado, pruebas: {} };
-                    }
-                    porEstudiante[e.correo].pruebas[e.prueba] = { correctas: e.correctas, total: e.total };
-                });
-
-            // 3) Solo quienes tienen TODAS las pruebas (1, 2 y 3)
-            rankingPorNivel[nivel] = Object.values(porEstudiante)
-                .filter(e => PRUEBAS_VALIDAS.every(p => e.pruebas[p]))
-                .map(e => {
-                    const lista = PRUEBAS_VALIDAS.map(p => ({
-                        prueba: p,
-                        correctas: e.pruebas[p].correctas,
-                        total: e.pruebas[p].total
-                    }));
-                    const correctas = lista.reduce((a, p) => a + p.correctas, 0);
-                    const total = lista.reduce((a, p) => a + p.total, 0);
-                    return {
-                        nombre: e.nombre,
-                        grado: e.grado,
-                        pruebas: lista,
-                        correctas,
-                        total,
-                        porcentaje: total > 0 ? correctas / total : 0
-                    };
-                })
-                .sort((a, b) => b.porcentaje - a.porcentaje || b.correctas - a.correctas);
-        }
-
-        res.json({ ranking: rankingPorNivel });
-    } catch (err) {
-        console.error("❌ Error al obtener ranking:", err.message);
-        res.status(500).json({ error: 'Error interno al obtener el ranking.' });
-    }
-});
 
 // ===================================================
 // ARRANCAR: primero la base de datos, luego el servidor

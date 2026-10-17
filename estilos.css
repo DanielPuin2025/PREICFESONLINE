@@ -50,7 +50,6 @@ body {
     font-weight: 600;
     letter-spacing: 1px;
 }
-
 @keyframes flotar {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-18px); }
@@ -3705,4 +3704,246 @@ select,
 .btn-ojo-tabla:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+/* ===================================================
+   🎈 FONDO FLOTANTE (pantallas de ingreso)
+   =================================================== */
+#fondo-flotante {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.flota {
+    position: absolute;
+    translate: -50% -50%;          /* centra el icono en el punto indicado */
+    font-size: var(--s, 2.4rem);
+    line-height: 1;
+    opacity: 0.85;
+    filter: drop-shadow(0 6px 10px rgba(124, 77, 255, 0.25));
+    animation: flotar-materia var(--d, 7s) ease-in-out infinite;
+    animation-delay: calc(var(--d, 7s) * -0.5);
+    user-select: none;
+}
+
+/* Símbolos escritos (π, x², H₂O, ABC...) con los colores de la app */
+.flota-texto {
+    font-weight: 900;
+    color: #7c4dff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+@keyframes flotar-materia {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50%      { transform: translateY(-18px) rotate(calc(var(--r, 0deg) * -1)); }
+}
+
+/* Las tarjetas de ingreso quedan por encima del fondo flotante */
+.contenedor {
+    position: relative;
+    z-index: 1;
+}
+
+/* En celulares se ven menos y más pequeños para no estorbar */
+@media (max-width: 700px) {
+    .flota { font-size: calc(var(--s, 2.4rem) * 0.7); opacity: 0.6; }
+}
+
+/* Respeta a quien tiene desactivadas las animaciones */
+@media (prefers-reduced-motion: reduce) {
+    .flota { animation: none; }
+}
+/* ⏱️ TEMPORIZADOR DE LA PRUEBA */
+.prueba-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.prueba-cabecera .prueba-badge {
+    margin-bottom: 0;
+}
+
+.prueba-temporizador {
+    background: #ffffff;
+    color: #2e2540;
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 10px 24px;
+    border-radius: 14px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Último minuto: rojo y parpadeando */
+.prueba-temporizador.poco-tiempo {
+    color: #dc2626;
+    animation: parpadeo-tiempo 1s ease-in-out infinite;
+}
+
+@keyframes parpadeo-tiempo {
+    50% { opacity: 0.45; }
+}
+.historial-resultado-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.historial-duracion {
+    color: #7a6ea3;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+/* Puntos animados del "Cargando" */
+.puntos-carga {
+    display: inline-block;
+    width: 1.4em;          /* ancho fijo para que el texto no se mueva */
+    text-align: left;
+}
+
+.puntos-carga::after {
+    content: '.';
+    animation: puntos-carga 2.4s steps(1) infinite;
+}
+
+@keyframes puntos-carga {
+    0%     { content: '.'; }
+    16.6%  { content: '..'; }
+    33.3%  { content: '...'; }
+    50%    { content: '..'; }
+    66.6%  { content: '.'; }
+    83.3%  { content: ''; }
+}
+/* ===================================================
+   ELABORADO POR / EQUIPO DE DESARROLLO
+   Pegar AL FINAL de estilos.css
+   =================================================== */
+.creditos-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.creditos-texto {
+    color: #7a6ea3;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.btn-ver-equipo {
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+    font-size: 0.75rem;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(124, 77, 255, 0.3);
+}
+
+.modal-equipo-caja {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.modal-equipo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #9b7cf7, #7c4dff);
+    color: #ffffff;
+}
+
+.modal-equipo-header h3 {
+    font-size: 1.1rem;
+}
+
+.modal-equipo-cerrar {
+    cursor: pointer;
+    font-weight: 900;
+    padding: 4px 8px;
+}
+
+.modal-equipo-lista {
+    padding: 20px 24px 26px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.equipo-fila {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f9f8fd;
+    border: 1px solid #e5defa;
+    border-radius: 16px;
+    padding: 12px 16px;
+}
+
+.equipo-foto {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 20%;
+    border: 3px solid #a78bfa;
+    background: #efe9ff;
+}
+/* Círculo sin foto: silueta de persona en morado */
+.equipo-foto-vacia {
+    background-color: #efe9ff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Ccircle cx='28' cy='21' r='8' fill='%237c4dff'/%3E%3Cpath d='M12 44c0-8.5 7-13 16-13s16 4.5 16 13c0 1.5-1 2.5-2.5 2.5h-27C13 46.5 12 45.5 12 44z' fill='%237c4dff'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+}
+
+.equipo-nombre {
+    color: #3a2e5c;
+    font-weight: 800;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.equipo-rol {
+    color: #7a6ea3;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+@media (max-width: 700px) {
+    .creditos-texto { display: none; }
+    .creditos-sidebar { justify-content: center; }
+}
+/* Derechos reservados en la barra lateral */
+.derechos-sidebar {
+    color: #7a6ea3;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: left;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5defa; /* la línea separadora */
+}
+
+@media (max-width: 700px) {
+    .derechos-sidebar { display: none; }
 }

@@ -8,12 +8,20 @@
 //     correcta: "elegir la letra" o "escribir el texto (letra aleatoria)".
 //     ✏️ Profesores Y administradores pueden marcar que una pregunta "va con
 //     el texto de la anterior" para que se mantengan seguidas al barajar.
+//     ✏️ En la materia Inglés se puede elegir el TIPO de pregunta:
+//        4 opciones (A-D), 3 opciones (A-C) o emparejamiento con un banco
+//        de 2 a 8 palabras (A-H).
+//     ✏️ En el emparejamiento, cada palabra del banco se muestra
+//        como una opción vertical ("A. palabra"), igual que Lectura Crítica.
 //  2) MODO EXAMEN SEGURO para Estudiantes: bloquea clic derecho, copiar,
 //     pegar, cortar, PrintScreen y atajos de captura; ante un intento de
 //     trampa oscurece la pantalla (CSS backdrop-filter).
-//  3) EXPULSIÓN INMEDIATA: si el estudiante sale de la ventana del examen
-//     (otra pestaña, otra aplicación, minimizar), el examen se anula y vuelve
-//     al menú principal.
+//  3) EXPULSIÓN AL PERDER EL FOCO:
+//        - Computador: inmediata (otra pestaña, otra aplicación, minimizar).
+//        - ✏️ NUEVO — Celular/tableta: se da una TOLERANCIA de 4 segundos.
+//          Si el estudiante vuelve antes (notificación, llamada, roce del
+//          selector de apps) el examen continúa y se registra una
+//          "salida breve". Si pasa de 4 segundos fuera, el examen se anula.
 //
 // Este archivo redefine o envuelve algunas funciones globales de script.js
 // (agregarBloquePregunta, leerPreguntasDelFormulario, iniciarSesion, etc.),
@@ -238,7 +246,7 @@ function agregarBloquePregunta(hacerScroll = true) {
     const selector = bloque.querySelector('.cp-modo-selector');
     if (selector) selector.classList.remove('oculto');
 
-    // ✏️ La casilla "va con la pregunta anterior" ahora también la ven los profesores:
+    // La casilla "va con la pregunta anterior" también la ven los profesores:
     // ya no se oculta según el rol.
 
     try {
@@ -250,6 +258,7 @@ function agregarBloquePregunta(hacerScroll = true) {
         mostrarAviso('⚠️ No se pudo cargar el editor de texto. Revisa tu conexión a internet y recarga la página.');
     }
 
+    actualizarVisibilidadTipos();   // el selector de tipo solo se ve en Inglés
     renumerarBloquesPregunta();
 
     if (hacerScroll && bloque) {
@@ -280,24 +289,342 @@ function cambiarModoRespuesta(select) {
     bloque.querySelector('.cp-correcta').required = !aleatoria;
 }
 
+// --- Reemplazos de funciones de script.js (mostrar preguntas con formato) ---
+
+// Opción de respuesta: la letra en negrilla y el texto con su formato (x², negritas...)
+function escribirOpcionEn(prefijoId, letra, texto) {
+    const el = document.getElementById(prefijoId + letra);
+    el.innerHTML = '';
+
+    const spanLetra = document.createElement('span');
+    spanLetra.className = 'prueba-opcion-letra';
+    spanLetra.textContent = letra + '.';
+
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'prueba-opcion-texto';
+    cuerpo.innerHTML = renderRico(texto);
+
+    el.appendChild(spanLetra);
+    el.appendChild(cuerpo);
+}
+
+// Enunciado con formato (el resto de renderizarPregunta se conserva tal cual)
+const renderizarPreguntaOriginal = renderizarPregunta;
+window.renderizarPregunta = function () {
+    renderizarPreguntaOriginal();
+    const pregunta = preguntasMateriaActual[indicePreguntaActual];
+    if (pregunta) {
+        document.getElementById('prueba-enunciado').innerHTML = renderRico(pregunta.enunciado);
+        // 3 opciones / emparejamiento
+        prepararOpcionesEspeciales(pregunta, 'prueba-opcion-', 'prueba-banco', respuestasMap[pregunta.id] || null);
+    }
+};
+
+const renderizarPreguntaPPOriginal = renderizarPreguntaPP;
+window.renderizarPreguntaPP = function () {
+    renderizarPreguntaPPOriginal();
+    const pregunta = ppPreguntas[ppIndice];
+    if (pregunta) {
+        document.getElementById('pp-enunciado').innerHTML = renderRico(pregunta.enunciado);
+        // 3 opciones / emparejamiento
+        prepararOpcionesEspeciales(pregunta, 'pp-opcion-', 'pp-banco', ppRespuestas[pregunta.id] || null);
+    }
+};
+
+// Detalle pregunta por pregunta del historial (con formato)
+async function verPreguntasMateria(resultadoId, materia) {
+    document.querySelectorAll('.dropdown-materias').forEach(d => d.classList.add('oculto'));
+
+    const modal = document.getElementById('modal-detalle');
+    const cuerpo = document.getElementById('modal-detalle-cuerpo');
+    document.getElementById('modal-detalle-titulo').innerText = materia;
+    cuerpo.innerHTML = '<p class="dropdown-cargando">Cargando preguntas...</p>';
+    modal.classList.remove('oculto');
+
+    try {
+        const url = `/api/resultado-preguntas?resultado_id=${resultadoId}&materia=${encodeURIComponent(materia)}&correo=${encodeURIComponent(usuarioActual.correo)}`;
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+        const preguntas = datos.preguntas || [];
+
+        if (preguntas.length === 0) {
+            cuerpo.innerHTML = '<p class="dropdown-cargando">No hay preguntas registradas para esta materia.</p>';
+            return;
+        }
+
+        cuerpo.innerHTML = preguntas.map((p, i) => {
+            // Según el tipo, se muestran 3, 4 o las palabras del banco
+            const info = infoPregunta(p);
+            let lista;
+            if (info.tipo === 'banco') {
+                lista = info.banco.map((w, k) => [LETRAS_BANCO[k], escaparHtml(w)]);
+            } else {
+                const todas = [['A', p.opcion_a], ['B', p.opcion_b], ['C', p.opcion_c], ['D', p.opcion_d]];
+                lista = (info.tipo === 'tres' ? todas.slice(0, 3) : todas).map(([l, t]) => [l, renderRico(t)]);
+            }
+            const opcionesHtml = lista.map(([letra, html]) => {
+                let clase = 'detalle-opcion';
+                if (letra === p.respuesta_correcta) clase += ' opcion-correcta';
+                if (letra === p.opcion_elegida && letra !== p.respuesta_correcta) clase += ' opcion-incorrecta';
+                return `<div class="${clase}">${letra}. ${html}</div>`;
+            }).join('');
+
+            const estado = p.es_correcta
+                ? '<span class="detalle-estado detalle-estado-ok">✔ Correcta</span>'
+                : '<span class="detalle-estado detalle-estado-mal">✘ Incorrecta</span>';
+
+            const imagenHtml = p.imagen
+                ? `<img src="${escaparHtml(p.imagen)}" alt="Imagen de la pregunta" class="detalle-pregunta-imagen">`
+                : '';
+
+            return `
+                <div class="detalle-pregunta-card">
+                    <p class="detalle-pregunta-numero">Pregunta ${i + 1} ${estado}</p>
+                    ${imagenHtml}
+                    <div class="detalle-pregunta-enunciado">${renderRico(p.enunciado)}</div>
+                    <div class="detalle-opciones">${opcionesHtml}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('⚠️ No se pudieron cargar las preguntas de la materia:', err);
+        cuerpo.innerHTML = '<p class="dropdown-cargando">Error al cargar las preguntas.</p>';
+    }
+}
+
+// =====================================================================
+// TIPOS DE PREGUNTA DE INGLÉS: 3 opciones y emparejamiento (banco)
+//
+// Cómo se guarda (sin columnas nuevas en la base de datos):
+//   - 3 opciones: opcion_d queda vacía.
+//   - Emparejamiento: opcion_a = "BANCO::" + lista JSON de palabras;
+//     opcion_b, c y d quedan vacías. La letra correcta va en respuesta_correcta
+//     (de A hasta H).
+// =====================================================================
+const PREFIJO_BANCO = 'BANCO::';
+const LETRAS_BANCO = 'ABCDEFGH';
+
+// Detecta el tipo de una pregunta a partir de lo que viene del servidor
+function infoPregunta(p) {
+    const a = String(p.opcion_a === null || p.opcion_a === undefined ? '' : p.opcion_a);
+    if (a.startsWith(PREFIJO_BANCO)) {
+        try {
+            const banco = JSON.parse(a.slice(PREFIJO_BANCO.length));
+            if (Array.isArray(banco)) return { tipo: 'banco', banco };
+        } catch (e) { /* si falla, se trata como pregunta normal */ }
+    }
+    const d = String(p.opcion_d === null || p.opcion_d === undefined ? '' : p.opcion_d).trim();
+    if (d === '') return { tipo: 'tres' };
+    return { tipo: 'cuatro' };
+}
+
+function escaparTextoSimple(t) {
+    return String(t === null || t === undefined ? '' : t)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function textoDeHtml(html) {
+    const t = document.createElement('template');
+    t.innerHTML = String(html === null || html === undefined ? '' : html);
+    return (t.content.textContent || '').trim();
+}
+
+// ---------- Formulario "Crear prueba" ----------
+function materiaActualCP() {
+    const el = document.getElementById(rolActual === 'admin' ? 'cp-materia-nivel' : 'cp-materia');
+    return el ? el.value : '';
+}
+
+// El selector de tipo solo se ve si la materia es Inglés
+function actualizarVisibilidadTipos() {
+    const ingles = materiaActualCP() === 'Inglés';
+    document.querySelectorAll('#cp-preguntas .cp-bloque-pregunta').forEach(b => {
+        const cont = b.querySelector('.cp-tipo-selector');
+        const sel = b.querySelector('.cp-tipo-pregunta');
+        if (!cont || !sel) return;
+        cont.classList.toggle('oculto', !ingles);
+        if (!ingles && sel.value !== 'cuatro') {
+            sel.value = 'cuatro';
+            cambiarTipoPregunta(sel);
+        }
+    });
+}
+
+['cp-materia', 'cp-materia-nivel', 'cp-sesion'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', actualizarVisibilidadTipos);
+});
+
+function cambiarTipoPregunta(select) {
+    const bloque = select.closest('.cp-bloque-pregunta');
+    if (!bloque) return;
+
+    const tipo = select.value;
+    const esBanco = tipo === 'banco';
+
+    bloque.querySelector('.cp-enunciado-caja').classList.toggle('oculto', esBanco);
+    bloque.querySelector('.cp-banco').classList.toggle('oculto', !esBanco);
+
+    // 3 opciones y emparejamiento solo usan "elegir la letra"
+    const modo = bloque.querySelector('.cp-modo-respuesta');
+    if (tipo !== 'cuatro') modo.value = 'letra';
+    cambiarModoRespuesta(modo);
+
+    bloque.querySelector('.cp-modo-selector').classList.toggle('oculto', tipo !== 'cuatro');
+    bloque.querySelector('.cp-modo-letra').classList.toggle('oculto', esBanco || modo.value === 'aleatoria');
+    if (esBanco) bloque.querySelector('.cp-modo-aleatoria').classList.add('oculto');
+
+    // En 3 opciones se oculta la D
+    const filaD = bloque.querySelector('.cp-opcion-fila[data-opc="d"]');
+    if (filaD) filaD.classList.toggle('oculto', tipo === 'tres');
+
+    const correcta = bloque.querySelector('.cp-correcta');
+    const optD = correcta.querySelector('option[value="D"]');
+    if (optD) { optD.disabled = tipo === 'tres'; optD.hidden = tipo === 'tres'; }
+    if (tipo === 'tres' && correcta.value === 'D') correcta.value = '';
+    correcta.required = !esBanco && modo.value !== 'aleatoria';
+
+    if (esBanco && bloque.querySelectorAll('.cp-banco-palabra').length === 0) {
+        for (let i = 0; i < 3; i++) agregarPalabraEn(bloque, '');
+        agregarFraseEn(bloque);
+    }
+}
+
+// ---------- Banco de palabras ----------
+function renumerarBanco(bloque) {
+    const palabras = bloque.querySelectorAll('.cp-banco-palabra');
+    palabras.forEach((fila, i) => {
+        fila.querySelector('.cp-banco-letra').textContent = LETRAS_BANCO[i];
+    });
+
+    const permitidas = LETRAS_BANCO.slice(0, palabras.length);
+    bloque.querySelectorAll('.cp-frase-correcta').forEach(sel => {
+        const previa = sel.value;
+        sel.innerHTML = '<option value="" disabled>Resp.</option>' +
+            permitidas.split('').map(l => `<option value="${l}">${l}</option>`).join('');
+        sel.value = (previa && permitidas.includes(previa)) ? previa : '';
+    });
+}
+
+function agregarPalabraEn(bloque, texto) {
+    const cont = bloque.querySelector('.cp-banco-palabras');
+    if (cont.children.length >= 8) {
+        mostrarAviso('El banco puede tener máximo 8 palabras (A-H).');
+        return;
+    }
+    const fila = document.createElement('div');
+    fila.className = 'cp-banco-palabra';
+    fila.innerHTML = `
+        <span class="cp-banco-letra"></span>
+        <input type="text" class="cp-banco-input" maxlength="100" placeholder="Palabra" autocomplete="off"
+               onkeydown="if (event.key === 'Enter') event.preventDefault()">
+        <span class="cp-banco-quitar" title="Quitar palabra" onclick="quitarPalabraBanco(this)">✕</span>`;
+    fila.querySelector('input').value = texto || '';
+    cont.appendChild(fila);
+    renumerarBanco(bloque);
+}
+
+function quitarPalabraBanco(el) {
+    const bloque = el.closest('.cp-bloque-pregunta');
+    const fila = el.closest('.cp-banco-palabra');
+    if (!bloque || !fila) return;
+
+    const lista = Array.from(bloque.querySelectorAll('.cp-banco-palabra'));
+    if (lista.length <= 2) {
+        mostrarAviso('El banco necesita al menos 2 palabras.');
+        return;
+    }
+
+    // Las frases que apuntaban a letras posteriores se corren una letra
+    const i = lista.indexOf(fila);
+    bloque.querySelectorAll('.cp-frase-correcta').forEach(sel => {
+        if (!sel.value) return;
+        const k = LETRAS_BANCO.indexOf(sel.value);
+        if (k === i) sel.value = '';
+        else if (k > i) sel.value = LETRAS_BANCO[k - 1];
+    });
+
+    fila.remove();
+    renumerarBanco(bloque);
+}
+
+function agregarFraseEn(bloque, datos) {
+    const cont = bloque.querySelector('.cp-banco-frases');
+    const fila = document.createElement('div');
+    fila.className = 'cp-banco-frase';
+    fila.innerHTML = `
+        <input type="text" class="cp-frase-texto" maxlength="500" autocomplete="off"
+               placeholder="Frase (ej: It is a yellow fruit and monkeys love it.)"
+               onkeydown="if (event.key === 'Enter') event.preventDefault()">
+        <select class="cp-frase-correcta" aria-label="Letra correcta"></select>
+        <span class="cp-banco-quitar" title="Quitar frase" onclick="quitarFraseBanco(this)">✕</span>`;
+
+    if (datos) {
+        fila.querySelector('.cp-frase-texto').value = datos.texto || '';
+        fila._preguntaId = datos.id || null;
+    }
+    cont.appendChild(fila);
+    renumerarBanco(bloque);
+    if (datos && datos.correcta) fila.querySelector('.cp-frase-correcta').value = datos.correcta;
+}
+
+function quitarFraseBanco(el) {
+    const bloque = el.closest('.cp-bloque-pregunta');
+    const fila = el.closest('.cp-banco-frase');
+    if (!bloque || !fila) return;
+    if (bloque.querySelectorAll('.cp-banco-frase').length <= 1) {
+        mostrarAviso('El emparejamiento necesita al menos una frase.');
+        return;
+    }
+    fila.remove();
+}
+
+function clickAgregarPalabra(btn) { agregarPalabraEn(btn.closest('.cp-bloque-pregunta'), ''); }
+function clickAgregarFrase(btn) { agregarFraseEn(btn.closest('.cp-bloque-pregunta')); }
+
+// ---------- Leer el formulario ----------
 // Lee todos los bloques y arma la lista que se envía al servidor (HTML de cada editor).
-// El modo de la respuesta ('letra' o 'aleatoria') se lee del selector de cada
-// pregunta para cualquier rol.
+// Un bloque de emparejamiento genera varias preguntas (una por frase).
 function leerPreguntasDelFormulario() {
     const bloques = document.querySelectorAll('#cp-preguntas .cp-bloque-pregunta');
 
-    return Array.from(bloques).map(b => {
+    return Array.from(bloques).flatMap(b => {
         const ed = b._editores || {};
+        const selTipo = b.querySelector('.cp-tipo-pregunta');
+        const tipo = selTipo ? selTipo.value : 'cuatro';
+        const conAnterior = !!(b.querySelector('.cp-con-anterior-check') && b.querySelector('.cp-con-anterior-check').checked);
+
+        // EMPAREJAMIENTO
+        if (tipo === 'banco') {
+            const banco = Array.from(b.querySelectorAll('.cp-banco-palabras .cp-banco-input')).map(i => i.value.trim());
+            const filas = Array.from(b.querySelectorAll('.cp-banco-frases .cp-banco-frase'));
+
+            if (filas.length === 0) {
+                return [{ id: null, tipo: 'banco', enunciado: '', banco, respuesta_correcta: '', con_anterior: false }];
+            }
+            return filas.map((fila, i) => ({
+                id: fila._preguntaId || null,
+                tipo: 'banco',
+                enunciado: '<p>' + escaparTextoSimple(fila.querySelector('.cp-frase-texto').value.trim()) + '</p>',
+                banco,
+                respuesta_correcta: fila.querySelector('.cp-frase-correcta').value,
+                // la primera frase usa la casilla del bloque; las demás van pegadas a la anterior
+                con_anterior: i === 0 ? conAnterior : true
+            }));
+        }
+
         const base = {
             id: b._preguntaId || null,
+            tipo,
             enunciado: htmlDeEditor(ed.enunciado),
             imagen: b._imagen || null,
             // true si la pregunta va pegada a la anterior (admin y profesor)
-            con_anterior: !!(b.querySelector('.cp-con-anterior-check') && b.querySelector('.cp-con-anterior-check').checked)
+            con_anterior: conAnterior
         };
 
+        // La letra aleatoria solo existe en las preguntas de 4 opciones
         const selectorModo = b.querySelector('.cp-modo-respuesta');
-        const modo = selectorModo ? selectorModo.value : 'letra';
+        const modo = (tipo === 'cuatro' && selectorModo) ? selectorModo.value : 'letra';
 
         // Solo se envían las imágenes de las opciones del modo que está activo
         const camposModo = modo === 'aleatoria' ? ['texto_correcta', 'inc1', 'inc2', 'inc3'] : ['a', 'b', 'c', 'd'];
@@ -305,42 +632,86 @@ function leerPreguntasDelFormulario() {
         camposModo.forEach(c => {
             if (b._imagenesOpc && b._imagenesOpc[c]) imagenes_opciones[c] = b._imagenesOpc[c];
         });
+        if (tipo === 'tres') delete imagenes_opciones.d;
 
         if (modo === 'aleatoria') {
-            return {
+            return [{
                 ...base,
                 modo: 'aleatoria',
                 texto_correcta: htmlDeEditor(ed.texto_correcta),
                 incorrectas: [htmlDeEditor(ed.inc1), htmlDeEditor(ed.inc2), htmlDeEditor(ed.inc3)],
                 imagenes_opciones
-            };
+            }];
         }
 
-        return {
+        return [{
             ...base,
             modo: 'letra',
             opcion_a: htmlDeEditor(ed.a),
             opcion_b: htmlDeEditor(ed.b),
             opcion_c: htmlDeEditor(ed.c),
-            opcion_d: htmlDeEditor(ed.d),
+            opcion_d: tipo === 'tres' ? '' : htmlDeEditor(ed.d),
             respuesta_correcta: b.querySelector('.cp-correcta').value,
             imagenes_opciones
-        };
+        }];
     });
 }
 
-// Llena el formulario con las preguntas que ya existían (para editarlas)
+// ---------- Llenar el formulario con preguntas que ya existían (para editarlas) ----------
 function llenarBloquesDesdePreguntas(preguntas) {
     const contenedor = document.getElementById('cp-preguntas');
     contenedor.innerHTML = '';
 
+    let bloqueBanco = null;   // bloque de emparejamiento que se está llenando
+    let bancoJson = null;
+
     preguntas.forEach(q => {
+        const info = infoPregunta(q);
+
+        // --- Emparejamiento: las frases consecutivas con el mismo banco forman un solo bloque ---
+        if (info.tipo === 'banco') {
+            const json = JSON.stringify(info.banco);
+            const frase = { id: q.id, texto: textoDeHtml(q.enunciado), correcta: q.respuesta_correcta };
+
+            if (bloqueBanco && Number(q.con_anterior) && json === bancoJson) {
+                agregarFraseEn(bloqueBanco, frase);
+                return;
+            }
+
+            agregarBloquePregunta(false);
+            const bloque = contenedor.lastElementChild;
+            const sel = bloque.querySelector('.cp-tipo-pregunta');
+            sel.value = 'banco';
+            cambiarTipoPregunta(sel);
+            bloque.querySelector('.cp-banco-palabras').innerHTML = '';
+            bloque.querySelector('.cp-banco-frases').innerHTML = '';
+            info.banco.forEach(w => agregarPalabraEn(bloque, w));
+            agregarFraseEn(bloque, frase);
+
+            const casilla = bloque.querySelector('.cp-con-anterior-check');
+            if (casilla) casilla.checked = !!Number(q.con_anterior);
+
+            bloqueBanco = bloque;
+            bancoJson = json;
+            return;
+        }
+
+        bloqueBanco = null;
+        bancoJson = null;
+
+        // --- 3 o 4 opciones ---
         agregarBloquePregunta(false);
         const bloque = contenedor.lastElementChild;
         const ed = bloque._editores;
         if (!ed) return;
 
         bloque._preguntaId = q.id;
+
+        if (info.tipo === 'tres') {
+            const selTipo = bloque.querySelector('.cp-tipo-pregunta');
+            selTipo.value = 'tres';
+            cambiarTipoPregunta(selTipo);
+        }
 
         // Marca la casilla si la pregunta iba con la anterior
         const casillaAnterior = bloque.querySelector('.cp-con-anterior-check');
@@ -378,98 +749,96 @@ function llenarBloquesDesdePreguntas(preguntas) {
     });
 
     if (preguntas.length === 0) agregarBloquePregunta(false);
+    actualizarVisibilidadTipos();
 }
 
-// --- Reemplazos de funciones de script.js (mostrar preguntas con formato) ---
-
-// Opción de respuesta: la letra en negrilla y el texto con su formato (x², negritas...)
-function escribirOpcionEn(prefijoId, letra, texto) {
-    const el = document.getElementById(prefijoId + letra);
-    el.innerHTML = '';
-
-    const spanLetra = document.createElement('span');
-    spanLetra.className = 'prueba-opcion-letra';
-    spanLetra.textContent = letra + '.';
-
-    const cuerpo = document.createElement('div');
-    cuerpo.className = 'prueba-opcion-texto';
-    cuerpo.innerHTML = renderRico(texto);
-
-    el.appendChild(spanLetra);
-    el.appendChild(cuerpo);
+// ---------- Lo que ve el estudiante ----------
+function marcarSeleccion(prefijo, letra) {
+    document.querySelectorAll('[id^="' + prefijo + '"]').forEach(el => {
+        el.classList.toggle('seleccionada', el.id === prefijo + letra);
+    });
 }
 
-// Enunciado con formato (el resto de renderizarPregunta se conserva tal cual)
-const renderizarPreguntaOriginal = renderizarPregunta;
-window.renderizarPregunta = function () {
-    renderizarPreguntaOriginal();
-    const pregunta = preguntasMateriaActual[indicePreguntaActual];
-    if (pregunta) {
-        document.getElementById('prueba-enunciado').innerHTML = renderRico(pregunta.enunciado);
+function obtenerBancoEl(id, contenedorOpciones) {
+    let el = document.getElementById(id);
+    if (!el) {
+        el = document.createElement('div');
+        el.id = id;
+        el.className = 'prueba-banco oculto';
+        contenedorOpciones.parentNode.insertBefore(el, contenedorOpciones);
     }
-};
+    return el;
+}
 
-const renderizarPreguntaPPOriginal = renderizarPreguntaPP;
-window.renderizarPreguntaPP = function () {
-    renderizarPreguntaPPOriginal();
-    const pregunta = ppPreguntas[ppIndice];
-    if (pregunta) {
-        document.getElementById('pp-enunciado').innerHTML = renderRico(pregunta.enunciado);
-    }
-};
+// Ajusta cuántas opciones se ven (3, 4 u 8).
+// En el emparejamiento, cada palabra del banco se muestra como una opción normal
+// ("A. palabra"), en lista vertical igual que Lectura Crítica. Ya no se usa el
+// recuadro del banco en fila ni los botones circulares.
+function prepararOpcionesEspeciales(pregunta, prefijo, idBanco, elegida) {
+    const info = infoPregunta(pregunta);
+    const contenedor = document.getElementById(prefijo + 'A').parentNode;
+    contenedor.querySelectorAll('.prueba-opcion-extra').forEach(e => e.remove());
 
-// Detalle pregunta por pregunta del historial (con formato)
-async function verPreguntasMateria(resultadoId, materia) {
-    document.querySelectorAll('.dropdown-materias').forEach(d => d.classList.add('oculto'));
+    let letras = ['A', 'B', 'C', 'D'];
+    if (info.tipo === 'tres') letras = ['A', 'B', 'C'];
+    if (info.tipo === 'banco') letras = LETRAS_BANCO.slice(0, info.banco.length).split('');
 
-    const modal = document.getElementById('modal-detalle');
-    const cuerpo = document.getElementById('modal-detalle-cuerpo');
-    document.getElementById('modal-detalle-titulo').innerText = materia;
-    cuerpo.innerHTML = '<p class="dropdown-cargando">Cargando preguntas...</p>';
-    modal.classList.remove('oculto');
+    // Sin modo en fila y sin recuadro aparte del banco
+    contenedor.classList.remove('modo-banco');
+    const bancoEl = obtenerBancoEl(idBanco, contenedor);
+    bancoEl.innerHTML = '';
+    bancoEl.classList.add('oculto');
 
-    try {
-        const url = `/api/resultado-preguntas?resultado_id=${resultadoId}&materia=${encodeURIComponent(materia)}&correo=${encodeURIComponent(usuarioActual.correo)}`;
-        const respuesta = await fetch(url);
-        const datos = await respuesta.json();
-        const preguntas = datos.preguntas || [];
-
-        if (preguntas.length === 0) {
-            cuerpo.innerHTML = '<p class="dropdown-cargando">No hay preguntas registradas para esta materia.</p>';
-            return;
+    letras.forEach((l, i) => {
+        let el = document.getElementById(prefijo + l);
+        if (!el) {   // E, F, G, H se crean al vuelo
+            el = document.createElement('div');
+            el.id = prefijo + l;
+            el.className = 'prueba-opcion prueba-opcion-extra';
+            el.addEventListener('click', () => {
+                if (prefijo === 'pp-opcion-') seleccionarOpcionPP(l);
+                else seleccionarOpcion(l);
+            });
+            contenedor.appendChild(el);
         }
 
-        cuerpo.innerHTML = preguntas.map((p, i) => {
-            const opciones = { A: p.opcion_a, B: p.opcion_b, C: p.opcion_c, D: p.opcion_d };
-            const opcionesHtml = Object.entries(opciones).map(([letra, texto]) => {
-                let clase = 'detalle-opcion';
-                if (letra === p.respuesta_correcta) clase += ' opcion-correcta';
-                if (letra === p.opcion_elegida && letra !== p.respuesta_correcta) clase += ' opcion-incorrecta';
-                return `<div class="${clase}">${letra}. ${renderRico(texto)}</div>`;
-            }).join('');
+        if (info.tipo === 'banco') {   // letra en negrilla + la palabra del banco
+            el.innerHTML = '';
 
-            const estado = p.es_correcta
-                ? '<span class="detalle-estado detalle-estado-ok">✔ Correcta</span>'
-                : '<span class="detalle-estado detalle-estado-mal">✘ Incorrecta</span>';
+            const spanLetra = document.createElement('span');
+            spanLetra.className = 'prueba-opcion-letra';
+            spanLetra.textContent = l + '.';
 
-            const imagenHtml = p.imagen
-                ? `<img src="${escaparHtml(p.imagen)}" alt="Imagen de la pregunta" class="detalle-pregunta-imagen">`
-                : '';
+            const cuerpo = document.createElement('div');
+            cuerpo.className = 'prueba-opcion-texto';
+            cuerpo.innerHTML = renderRico(info.banco[i]);
 
-            return `
-                <div class="detalle-pregunta-card">
-                    <p class="detalle-pregunta-numero">Pregunta ${i + 1} ${estado}</p>
-                    ${imagenHtml}
-                    <div class="detalle-pregunta-enunciado">${renderRico(p.enunciado)}</div>
-                    <div class="detalle-opciones">${opcionesHtml}</div>
-                </div>
-            `;
-        }).join('');
-    } catch (err) {
-        console.error('⚠️ No se pudieron cargar las preguntas de la materia:', err);
-        cuerpo.innerHTML = '<p class="dropdown-cargando">Error al cargar las preguntas.</p>';
-    }
+            el.appendChild(spanLetra);
+            el.appendChild(cuerpo);
+        }
+    });
+
+    ['A', 'B', 'C', 'D'].forEach(l => {
+        document.getElementById(prefijo + l).classList.toggle('oculto', !letras.includes(l));
+    });
+
+    marcarSeleccion(prefijo, elegida);
 }
+
+// Las originales solo marcaban A-D: ahora sirven también para E-H
+window.seleccionarOpcion = function (letra) {
+    opcionSeleccionada = letra;
+    const pregunta = preguntasMateriaActual[indicePreguntaActual];
+    if (pregunta) respuestasMap[pregunta.id] = letra;
+    marcarSeleccion('prueba-opcion-', letra);
+};
+
+window.seleccionarOpcionPP = function (letra) {
+    const pregunta = ppPreguntas[ppIndice];
+    if (!pregunta) return;
+    ppRespuestas[pregunta.id] = letra;
+    marcarSeleccion('pp-opcion-', letra);
+};
 
 // =====================================================================
 // 2) MODO EXAMEN SEGURO (solo estudiantes)
@@ -611,8 +980,26 @@ function motivoDeTecla(e) {
 })();
 
 // =====================================================================
-// 3) EXPULSIÓN INMEDIATA AL PERDER EL FOCO
+// 3) EXPULSIÓN AL PERDER EL FOCO
+//
+//   - Computador: inmediata, como siempre.
+//   - Celular / tableta: TOLERANCIA de 4 segundos. Las notificaciones,
+//     llamadas o un roce del selector de apps no anulan el examen si el
+//     estudiante vuelve a tiempo; la salida queda registrada como
+//     "salida breve" en la tabla incidentes_examen.
 // =====================================================================
+
+// ¿Es un celular o una tableta táctil?
+const ES_MOVIL =
+    window.matchMedia('(pointer: coarse)').matches ||
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad con "sitio de escritorio"
+
+// Cuánto puede estar fuera de la app un estudiante en celular antes de anular el examen
+const TOLERANCIA_MOVIL_MS = 4000;
+
+let ocultoDesde = 0;
+let temporizadorOculto = null;
 
 // Avisa al servidor (tabla incidentes_examen). Si falla, no importa: el examen se anula igual.
 function registrarIncidenteExamen(tipo, referencia, motivo) {
@@ -628,10 +1015,13 @@ function registrarIncidenteExamen(tipo, referencia, motivo) {
 
 // Anula el examen en curso: descarta las respuestas y regresa al menú principal del estudiante
 function expulsarDelExamen(motivo) {
-    if (!ModoExamen.activo) return; // ya se expulsó (evita disparar dos veces con blur + visibilitychange)
+    if (!ModoExamen.activo) return; // ya se expulsó (evita disparar dos veces)
 
     const tipo = ModoExamen.tipo;
     const referencia = ModoExamen.referencia;
+
+    clearTimeout(temporizadorOculto);
+    ocultoDesde = 0;
 
     desactivarModoExamen();
     registrarIncidenteExamen(tipo, referencia, motivo);
@@ -650,21 +1040,56 @@ function expulsarDelExamen(motivo) {
     mostrarAviso('⛔ Examen anulado.\n\nSaliste de la ventana del examen (' + motivo + '). Tus respuestas no se guardaron.');
 }
 
-// Cambiar de pestaña, minimizar o bloquear la pantalla
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) expulsarDelExamen('cambiaste de pestaña o minimizaste el navegador');
+    if (!ModoExamen.activo) return;
+
+    // Computador: estricto, como antes
+    if (!ES_MOVIL) {
+        if (document.hidden) expulsarDelExamen('cambiaste de pestaña o minimizaste el navegador');
+        return;
+    }
+
+    // Celular: se da un margen de tolerancia
+    if (document.hidden) {
+        ocultoDesde = Date.now();
+        clearTimeout(temporizadorOculto);
+        temporizadorOculto = setTimeout(
+            () => expulsarDelExamen('saliste de la aplicación del examen'),
+            TOLERANCIA_MOVIL_MS
+        );
+        return;
+    }
+
+    // Volvió a la pantalla del examen
+    clearTimeout(temporizadorOculto);
+    if (!ocultoDesde) return;
+
+    const fuera = Date.now() - ocultoDesde;
+    ocultoDesde = 0;
+
+    if (fuera > TOLERANCIA_MOVIL_MS) {
+        expulsarDelExamen('saliste de la aplicación del examen');
+    } else {
+        registrarIncidenteExamen(
+            ModoExamen.tipo, ModoExamen.referencia,
+            'salida breve (' + Math.max(1, Math.round(fuera / 1000)) + ' s)'
+        );
+        activarEscudo('Volviste al examen. No salgas de esta pantalla.');
+    }
 });
 
-// La ventana pierde el foco (otra aplicación, barra de direcciones/buscador, herramientas del navegador...)
-window.addEventListener('blur', () => expulsarDelExamen('la ventana del examen perdió el foco'));
-window.addEventListener('pagehide', () => expulsarDelExamen('saliste de la página del examen'));
+// Solo en computador: perder el foco de la ventana anula el examen al instante
+if (!ES_MOVIL) {
+    window.addEventListener('blur', () => expulsarDelExamen('la ventana del examen perdió el foco'));
+    window.addEventListener('pagehide', () => expulsarDelExamen('saliste de la página del examen'));
 
-// Respaldo: algunos navegadores no disparan "blur" en todos los casos
-setInterval(() => {
-    if (ModoExamen.activo && !document.hasFocus()) {
-        expulsarDelExamen('la ventana del examen perdió el foco');
-    }
-}, 400);
+    // Respaldo: algunos navegadores no disparan "blur" en todos los casos
+    setInterval(() => {
+        if (ModoExamen.activo && !document.hasFocus()) {
+            expulsarDelExamen('la ventana del examen perdió el foco');
+        }
+    }, 400);
+}
 
 // =====================================================================
 // Conexión con el flujo de script.js: activar el modo al empezar un examen

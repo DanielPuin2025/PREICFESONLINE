@@ -1,0 +1,1017 @@
+/* ===================================================================
+   movil.css  v3  (va DESPUÉS de estilos.css y editor-seguro.css)
+
+   Qué resuelve:
+   1) Ningún texto se desborda: palabras largas, correos, títulos,
+      enunciados, opciones, tablas, modales y editores.
+   2) En celular el menú pasa de columna lateral a barra superior con
+      desplazamiento horizontal (la pantalla queda para el contenido).
+   3) Android: sin "tirar para recargar" (perdería el examen), teclado
+      que no tapa los campos, toques sin retraso.
+   4) iOS: sin zoom al tocar campos, zonas seguras (notch / barra
+      inferior), alturas correctas con la barra de Safari, campos
+      escribibles aunque el body tenga user-select: none.
+   5) (v3) Los botones de la barra de Quill conservan su tamaño pequeño
+      (ya no los estira el min-height de 44 px).
+   No cambia colores ni temas.
+   =================================================================== */
+
+/* ---------- 1) BASE PARA TODOS LOS DISPOSITIVOS ---------- */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    -webkit-tap-highlight-color: transparent;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Android: tirar hacia abajo NO recarga la página (se perdería el examen) */
+html,
+body,
+.app-main,
+.vista-prueba,
+.modal-caja,
+.modal-detalle-cuerpo,
+.modal-equipo-lista,
+.seleccion-lista {
+    overscroll-behavior-y: contain;
+}
+
+/* Sin retraso del doble toque ni zoom accidental */
+button,
+.nav-item,
+.circulo-nivel,
+.prueba-opcion,
+select,
+label,
+summary {
+    touch-action: manipulation;
+}
+
+/* En pantallas táctiles el "hover" no debe dejar botones agrandados */
+@media (hover: none) {
+    button:hover,
+    .circulo-nivel:hover,
+    .prueba-opcion:hover,
+    .modal-boton-si:hover,
+    .btn-prueba-nivel:hover,
+    .seleccion-item:hover,
+    .cp-opcion-agregar:hover,
+    .cp-imagen-agregar:hover,
+    .pqrs-btn-enviar:hover {
+        transform: none;
+    }
+    .cp-opcion-agregar:hover {
+        transform: translateY(-50%);
+    }
+}
+
+/* Altura real de la pantalla (la barra del navegador móvil no tapa nada) */
+@supports (height: 100dvh) {
+    body,
+    .splash-screen,
+    .vista-prueba {
+        height: 100dvh;
+    }
+    .modal-caja {
+        max-height: 92dvh;
+    }
+    .modal-detalle-caja,
+    .modal-equipo-caja {
+        max-height: 85dvh;
+    }
+}
+
+/* Desplazamiento suave con el dedo en iOS */
+.app-main,
+.vista-prueba,
+.modal-caja,
+.modal-detalle-cuerpo,
+.modal-equipo-lista,
+.seleccion-lista,
+.registros-tabla-wrap,
+.sidebar-nav {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* El body es flex centrado con overflow oculto: en pantallas bajas (teclado
+   abierto) la tarjeta de ingreso se cortaba por arriba. Con margin:auto se
+   centra cuando cabe y se puede desplazar cuando no cabe. */
+body {
+    align-items: flex-start;
+    overflow-y: auto;
+}
+
+.contenedor {
+    margin: auto;
+}
+
+/* ---------- 2) TEXTO QUE NUNCA SE DESBORDA ---------- */
+/* Hijos flex pueden encogerse (sin esto un texto largo ensancha la caja) */
+.pp-info,
+.pp-titulo,
+.resultado-fila-info,
+.resultado-item .resultado-fila,
+.pregunta-creada-info,
+.seleccion-item-texto,
+.promedio-info,
+.historial-fila > *,
+.pqrs-fila > *,
+.ranking-fila,
+.prueba-opcion-texto,
+.equipo-datos {
+    min-width: 0;
+}
+
+/* Cualquier texto largo (títulos, nombres, correos, enunciados, opciones)
+   baja de línea en lugar de salirse de su caja */
+.pp-titulo,
+.pp-meta,
+.pregunta-creada-enunciado,
+.pregunta-creada-fecha,
+.resultado-fila-titulo,
+.resultado-fila-estudiante,
+.pqrs-mensaje-texto,
+.pqrs-respuesta-texto,
+.pqrs-remitente,
+.seleccion-item-titulo,
+.prueba-badge,
+.prueba-enunciado,
+.prueba-opcion-texto,
+.detalle-pregunta-enunciado,
+.detalle-opcion,
+.prueba-banco-item,
+.app-topbar span,
+.equipo-nombre,
+.ranking-nombre,
+.ranking-chip,
+.titulo-nivel-sesiones,
+.fechas-prueba-nombre,
+.modal-pregunta,
+.materia,
+.pill-niveles,
+.puntaje-minimo,
+.puntaje-porcentaje,
+.texto-proximamente,
+.cp-materia-info,
+.cp-con-anterior span,
+.cp-banco-titulo,
+.cp-ayuda-aleatoria,
+.fechas-ayuda,
+.fechas-error,
+.promedio-nota,
+.registros-tabla td {
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* Las píldoras largas (título de prueba, materia) bajan de línea */
+.historial-nivel-pill,
+.estado-pill,
+.pqrs-tipo-pill,
+.seleccion-item-pill {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.seleccion-item-pill {
+    max-width: 38%;
+}
+
+/* Imágenes, tablas y editores nunca se salen */
+img,
+video,
+.ql-editor img,
+.prueba-imagen,
+.opcion-img,
+.detalle-pregunta-imagen,
+.cp-imagen-vista,
+.cp-opcion-vista {
+    max-width: 100%;
+    height: auto;
+}
+
+.registros-tabla-wrap {
+    max-width: 100%;
+}
+
+.ql-container,
+.ql-editor {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.ql-editor {
+    word-break: break-word;
+}
+
+/* ---------- 3) CAMPOS DE FORMULARIO (iOS / Android) ---------- */
+/* 16 px o más: iOS no hace zoom al tocar un campo */
+input,
+select,
+textarea,
+.ql-editor {
+    font-size: max(16px, 1rem);
+}
+
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="text"],
+select,
+textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 10px;
+}
+
+/* Casillas y radios conservan su forma nativa */
+input[type="checkbox"],
+input[type="radio"] {
+    -webkit-appearance: auto;
+    appearance: auto;
+}
+
+input[type="date"],
+input[type="time"] {
+    min-height: 50px;
+    display: block;
+}
+
+/* iOS: con user-select:none en el body, los campos no dejaban escribir.
+   Se fuerza la selección dentro de todo lo editable. */
+input,
+textarea,
+select,
+.ql-editor,
+.ql-editor *,
+[contenteditable="true"],
+[contenteditable="true"] * {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* Flecha de las listas desplegables. Se sube la especificidad (:not(#x))
+   para ganarle a "#form-crear-pregunta select", ".resultados-filtro-grado",
+   etc., y que la flecha no se encime con el texto. */
+select:not(#a):not(#b):not(#c) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237c4dff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+    padding-right: 38px;
+    text-overflow: ellipsis;
+}
+
+/* Botones y zonas táctiles cómodas (mínimo ~44 px) */
+button,
+.nav-item,
+.modal-boton-no,
+.modal-imagen-cancelar,
+.cp-bloque-quitar,
+.cp-banco-quitar,
+.btn-ojo,
+.btn-ojo-tabla {
+    min-height: 44px;
+}
+
+/* ✅ CORRECCIÓN (v3): los botones de la barra de Quill (B, I, U, x₂, x²...)
+   son <button>, así que heredaban el min-height de 44 px y se estiraban.
+   Aquí recuperan su tamaño pequeño. Esta regla tiene más especificidad
+   que "button { min-height: 44px }", por eso la anula solo dentro del editor. */
+.cp-rico .ql-toolbar button,
+.cp-rico .ql-toolbar .ql-picker-label {
+    min-height: 0;
+    width: 28px;
+    height: 26px;
+}
+
+.modal-boton-no,
+.modal-imagen-cancelar,
+.cp-bloque-quitar,
+.cp-banco-quitar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+.btn-ojo {
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    right: 4px;
+}
+
+/* ---------- 4) ZONAS SEGURAS DE iPHONE ---------- */
+@supports (padding: env(safe-area-inset-top)) {
+    .app-topbar {
+        padding-right: max(30px, env(safe-area-inset-right));
+        padding-top: max(18px, env(safe-area-inset-top));
+    }
+    .sidebar {
+        padding-left: env(safe-area-inset-left);
+    }
+    .app-content {
+        padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    }
+    .prueba-topbar {
+        padding-top: max(20px, env(safe-area-inset-top));
+    }
+    .vista-prueba {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    .modal-overlay,
+    .modal-detalle-overlay,
+    .modal-imagen-overlay {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ---------- 5) CELULARES (hasta 700 px) ---------- */
+@media (max-width: 700px) {
+
+    /* ===== Menú: de columna lateral a barra superior =====
+       Fila 1: logo (izq.) + "Elaborado por / Cerrar sesión" (der.)
+       Fila 2: botones del menú con desplazamiento horizontal */
+    .contenedor-app {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: 0;
+        flex-shrink: 0;
+        padding: 8px 0 0;
+        border-right: none;
+        border-bottom: 1px solid #e5defa;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "logo  pie"
+            "menu  menu";
+        align-items: center;
+        overflow: visible;
+    }
+
+    .sidebar-logo {
+        grid-area: logo;
+        padding: 0 12px;
+        margin: 0;
+        border-bottom: none;
+        gap: 10px;
+    }
+
+    .sidebar-logo-img {
+        width: 38px;
+        height: 38px;
+    }
+
+    /* El texto del logo vuelve a verse (en columna estaba oculto) */
+    .sidebar-logo-text {
+        display: block;
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+
+    .sidebar-footer {
+        grid-area: pie;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 0 12px;
+        border-top: none;
+        text-align: right;
+    }
+
+    .derechos-sidebar {
+        display: none;
+    }
+
+    .creditos-sidebar {
+        margin: 0;
+        gap: 6px;
+    }
+
+    .creditos-texto {
+        display: none;
+    }
+
+    .btn-ver-equipo {
+        min-height: 36px;
+        font-size: 0.7rem;
+        padding: 6px 12px;
+    }
+
+    .cerrar-sesion {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        font-size: 0.78rem;
+        line-height: 1.2;
+        padding: 0 4px;
+        white-space: nowrap;
+    }
+
+    .sidebar-nav {
+        grid-area: menu;
+        flex-direction: row;
+        flex: none;
+        gap: 6px;
+        padding: 8px 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        border-top: 1px solid #eee;
+        margin-top: 8px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-item {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.82rem;
+        line-height: 1.2;
+        padding: 10px 14px;
+        border-radius: 30px;
+        overflow-wrap: normal;
+        word-break: normal;
+        hyphens: manual;
+    }
+
+    .nav-item.activo {
+        background: #efe9ff;
+    }
+
+    /* ===== Panel principal ===== */
+    .app-main {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+    }
+
+    .app-topbar {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        line-height: 1.3;
+        justify-content: flex-start;
+    }
+
+    .app-content {
+        padding: 18px 12px;
+        min-width: 0;
+    }
+
+    .seccion-app {
+        min-width: 0;
+    }
+
+    /* ===== Tarjetas y títulos ===== */
+    .niveles-card {
+        padding: 28px 14px;
+        border-radius: 24px;
+    }
+
+    .pill-niveles {
+        max-width: 100%;
+        padding: 13px 22px;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 30px;
+    }
+
+    .puntaje-actual-card {
+        padding: 32px 18px;
+        border-radius: 24px;
+    }
+
+    .puntaje-numero {
+        font-size: 3.2rem;
+    }
+
+    /* ===== Niveles B / A / S ===== */
+    .fila-circulos {
+        gap: 0;
+        row-gap: 30px;
+        padding-top: 0;
+        width: 100%;
+    }
+
+    .nivel-item {
+        width: min(220px, 100%);
+    }
+
+    /* La insignia entra en el flujo: ya no se encima con el nivel anterior */
+    .msg-recomendado:not(:empty) {
+        position: static;
+        transform: none;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        min-height: 28px;
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        font-size: 0.6rem;
+        line-height: 1.25;
+        white-space: normal;
+        text-wrap: balance;
+    }
+
+    .circulo-nivel {
+        width: 130px;
+        height: 130px;
+        font-size: 3.2rem;
+    }
+
+    .nivel-etiqueta {
+        font-size: 0.85rem;
+        margin-top: 10px;
+    }
+
+    /* ===== Lista de pruebas y sesiones ===== */
+    .lista-pruebas {
+        max-width: 100%;
+    }
+
+    .btn-prueba-nivel {
+        padding: 18px 12px;
+    }
+
+    .prueba-nivel-titulo {
+        font-size: 1.15rem;
+    }
+
+    .titulo-nivel-sesiones {
+        font-size: 1.25rem;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .fila-superior-sesiones {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .btn-volver-niveles,
+    .btn-repetir-nivel {
+        font-size: 0.8rem;
+        padding: 9px 14px;
+    }
+
+    .sesiones-contenedor {
+        gap: 20px;
+    }
+
+    .ventana-sesion {
+        width: 100%;
+        max-width: 100%;
+        padding: 24px 16px;
+    }
+
+    .materia {
+        font-size: 0.9rem;
+    }
+
+    /* ===== Historial, resultados, pruebas de profesores ===== */
+    .historial-card {
+        padding: 24px 12px;
+        border-radius: 24px;
+        min-height: 0;
+    }
+
+    .historial-fila {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .historial-fecha {
+        white-space: normal;
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .pregunta-creada-fila,
+    .pp-fila,
+    .resultado-fila {
+        padding: 14px 12px;
+        border-left-width: 6px;
+    }
+
+    .pregunta-creada-acciones {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
+
+    .pregunta-creada-pie {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pregunta-creada-info {
+        width: 100%;
+    }
+
+    .pc-acciones {
+        align-self: stretch;
+    }
+
+    .btn-pc {
+        width: 100%;
+    }
+
+    .resultados-filtro-grado-wrap,
+    .admin-barra-nivel,
+    .pp-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .resultados-filtro-grado,
+    .admin-select-nivel {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .pp-cabecera .historial-etiqueta {
+        text-align: center;
+    }
+
+    .resultados-acciones {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-eliminacion-multiple,
+    .btn-seleccionar-todos,
+    .btn-cancelar-seleccion,
+    .btn-eliminar-seleccion {
+        font-size: 0.8rem;
+        padding: 10px 14px;
+    }
+
+    .historial-fila.modo-seleccion {
+        padding-left: 14px;
+    }
+
+    /* ===== Base de datos registros ===== */
+    .registros-card {
+        padding: 24px 10px;
+    }
+
+    .registros-encabezado {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .registros-encabezado button,
+    .registros-encabezado .historial-nivel-pill {
+        width: 100%;
+        text-align: center;
+    }
+
+    .registros-botones {
+        max-width: 100%;
+    }
+
+    .registros-tabla {
+        font-size: 0.82rem;
+    }
+
+    .registros-tabla th,
+    .registros-tabla td {
+        padding: 10px;
+    }
+
+    .btn-borrar-registro {
+        padding: 7px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* ===== Ranking ===== */
+    .ranking-linea-1 {
+        gap: 6px;
+    }
+
+    .ranking-chip {
+        font-size: 0.75rem;
+    }
+
+    /* ===== Ayudas y PQRS ===== */
+    .pqrs-card {
+        padding: 24px 12px;
+    }
+
+    .pqrs-fila-encabezado {
+        gap: 8px;
+    }
+
+    /* ===== Presentar una prueba ===== */
+    .vista-prueba {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .prueba-topbar {
+        padding: 12px 16px;
+    }
+
+    .prueba-logo {
+        font-size: 1.1rem;
+    }
+
+    .prueba-card {
+        margin: 0 10px 16px;
+        padding: 20px 14px;
+        border-radius: 22px;
+    }
+
+    .prueba-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    /* El temporizador se queda visible mientras se desplaza la pregunta */
+    .prueba-cabecera {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #ffffff;
+        padding: 6px 0 10px;
+    }
+
+    .prueba-badge {
+        align-self: stretch;
+        text-align: center;
+        font-size: 1rem;
+        padding: 12px 18px;
+        margin-bottom: 18px;
+    }
+
+    .prueba-cabecera .prueba-badge {
+        margin-bottom: 0;
+    }
+
+    .prueba-temporizador {
+        align-self: center;
+        font-size: 1.25rem;
+        padding: 8px 20px;
+    }
+
+    .prueba-enunciado-caja {
+        padding: 16px 14px;
+        min-height: 0;
+    }
+
+    .prueba-enunciado {
+        font-size: 0.98rem;
+    }
+
+    .prueba-imagen {
+        max-height: 260px;
+    }
+
+    .prueba-opciones {
+        max-width: 100%;
+    }
+
+    .prueba-opcion {
+        padding: 12px 14px;
+        align-items: flex-start;
+    }
+
+    /* Emparejamiento (A-H) en celular: botones redondos que bajan de línea */
+    .prueba-opciones.modo-banco .prueba-opcion {
+        width: 52px;
+        min-height: 52px;
+    }
+
+    .prueba-banco {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .prueba-navegacion {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .prueba-navegacion button {
+        flex: 1 1 100%;
+        padding: 13px 14px;
+    }
+
+    .btn-anterior-pregunta {
+        border-radius: 14px;
+    }
+
+    /* ===== Ventanas emergentes ===== */
+    .modal-caja {
+        padding: 28px 18px 22px;
+        width: calc(100% - 24px);
+    }
+
+    .modal-pregunta {
+        font-size: 1.05rem;
+        margin-bottom: 22px;
+    }
+
+    .modal-detalle-overlay,
+    .modal-imagen-overlay {
+        padding: 12px;
+    }
+
+    .modal-detalle-header,
+    .modal-detalle-cuerpo {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .modal-imagen-caja {
+        padding: 22px 16px 18px;
+    }
+
+    .grado-desplegable-resumen {
+        max-width: 55%;
+    }
+
+    .grado-desplegable-lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .promedio-fila {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .promedio-info {
+        flex-basis: 100%;
+        align-items: center;
+    }
+
+    .promedio-campo {
+        justify-content: center;
+    }
+
+    /* ===== Crear prueba ===== */
+    .vista-crear-prueba .pill-niveles {
+        margin-bottom: 24px;
+    }
+
+    .cp-bloque-pregunta {
+        padding: 14px 10px;
+    }
+
+    .cp-con-anterior {
+        font-size: 0.8rem;
+        padding: 10px 12px;
+    }
+
+    .cp-fila-doble {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* La barra de formato de Quill baja de línea en lugar de salirse */
+    .cp-rico .ql-toolbar.ql-snow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    .cp-rico .ql-toolbar button {
+        min-height: 0;
+        width: 34px;
+        height: 32px;
+    }
+
+    .cp-banco {
+        padding: 12px 10px;
+    }
+
+    .cp-banco-frase {
+        flex-wrap: wrap;
+    }
+
+    #form-crear-pregunta .cp-banco-frase select {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .cp-opcion-agregar {
+        width: 38px;
+        height: 38px;
+    }
+
+    /* ===== Pantallas de ingreso ===== */
+    .contenedor-logo {
+        width: min(260px, 70vw);
+        height: min(260px, 70vw);
+    }
+
+    .contenedor {
+        padding: 14px;
+    }
+
+    .tarjeta {
+        padding: 28px 18px;
+    }
+}
+
+/* ---------- 6) CELULARES MUY PEQUEÑOS (hasta 360 px) ---------- */
+@media (max-width: 360px) {
+    .sidebar-logo-text {
+        display: none;
+    }
+
+    .nav-item {
+        font-size: 0.78rem;
+        padding: 9px 12px;
+    }
+
+    .app-content {
+        padding: 14px 8px;
+    }
+
+    .circulo-nivel {
+        width: 116px;
+        height: 116px;
+        font-size: 2.8rem;
+    }
+
+    .pill-niveles {
+        font-size: 0.95rem;
+        padding: 12px 16px;
+    }
+
+    .puntaje-numero {
+        font-size: 2.8rem;
+    }
+}
+
+/* ---------- 7) CELULAR EN HORIZONTAL (poca altura) ---------- */
+@media (max-height: 480px) and (orientation: landscape) {
+    .sidebar-logo-text {
+        display: none;
+    }
+
+    .app-topbar {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .prueba-card {
+        padding: 16px 14px;
+    }
+
+    .prueba-cabecera {
+        position: static;
+    }
+}
+
+/* ---------- 8) TABLETAS (701 px a 1024 px) ---------- */
+@media (min-width: 701px) and (max-width: 1024px) {
+    .app-content {
+        padding: 30px 20px;
+    }
+
+    .sidebar {
+        width: 220px;
+        min-width: 220px;
+    }
+
+    .nav-item {
+        font-size: 0.88rem;
+    }
+
+    .prueba-card {
+        margin: 0 16px 24px;
+    }
+}
+
+/* Quien tiene desactivadas las animaciones no las ve */
+@media (prefers-reduced-motion: reduce) {
+    .prueba-temporizador.poco-tiempo,
+    .puntos-carga::after {
+        animation: none;
+    }
+}

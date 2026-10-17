@@ -293,6 +293,7 @@ CREATE TABLE `resultados` (
   `sesion` int(11) NOT NULL,
   `correctas` int(11) NOT NULL,
   `total` int(11) NOT NULL,
+  `duracion_segundos` int(11) DEFAULT NULL,
   `fecha` varchar(50) NOT NULL,
   `intento` int(11) NOT NULL DEFAULT 1,
   `prueba` int(11) NOT NULL DEFAULT 1

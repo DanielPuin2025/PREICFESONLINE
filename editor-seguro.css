@@ -364,3 +364,122 @@ body.modo-examen * {
     line-height: 1.35;
     text-align: left;
 }
+/* ---------- TIPOS DE PREGUNTA DE INGLÉS ---------- */
+.cp-tipo-selector {
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+#form-crear-pregunta .cp-tipo-selector select {
+    font-weight: 700;
+    color: #5b4a8f;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.cp-banco {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #efe9ff;
+    border: 1px solid #d9ccfb;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.cp-banco-titulo {
+    color: #5b4a8f;
+    font-weight: 800;
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+
+.cp-banco-palabras,
+.cp-banco-frases {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cp-banco-palabra,
+.cp-banco-frase {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cp-banco-letra {
+    flex: 0 0 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #7c4dff;
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#form-crear-pregunta .cp-banco-frase select {
+    width: 110px;
+    flex: 0 0 110px;
+}
+
+.cp-banco-quitar {
+    color: #e74c3c;
+    font-weight: 900;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 6px;
+}
+
+/* Lo que ve el estudiante: recuadro con el banco y botones de letra */
+.prueba-banco {
+    background: #ffffff;
+    border: 2px solid var(--tema-badge, #7c4dff);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    max-width: 700px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px 18px;
+}
+
+.prueba-banco-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #2e2540;
+    overflow-wrap: anywhere;
+}
+
+.prueba-banco-letra {
+    flex: 0 0 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--tema-badge, #7c4dff);
+    color: var(--tema-texto-badge, #ffffff);
+    font-weight: 900;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prueba-opciones.modo-banco {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.prueba-opciones.modo-banco .prueba-opcion {
+    width: 56px;
+    min-height: 56px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+}

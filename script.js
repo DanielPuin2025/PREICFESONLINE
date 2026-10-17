@@ -67,6 +67,23 @@ function formatearHora(hhmm) {
     return h + ':' + m[2] + ' ' + sufijo;
 }
 
+// Convierte segundos en un texto legible.
+//   formatearDuracion(45)   -> "45 s"
+//   formatearDuracion(750)  -> "12 min 30 s"
+//   formatearDuracion(3725) -> "1 h 2 min"
+// Devuelve '' si no hay dato (resultados antiguos guardados sin tiempo).
+function formatearDuracion(segundos) {
+    if (segundos === null || segundos === undefined || segundos === '') return '';
+    const s = Number(segundos);
+    if (isNaN(s) || s < 0) return '';
+    if (s < 60) return s + ' s';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return h + ' h ' + m + ' min';
+    return m + ' min' + (r ? ' ' + r + ' s' : '');
+}
+
 // Fecha de hoy como "AAAA-MM-DD" (hora local del navegador)
 function hoyLocal() {
     const d = new Date();
@@ -261,6 +278,10 @@ function volverARoles() {
 }
 
 function mostrarNiveles(usuario) {
+    // Se oculta el fondo flotante de las materias al entrar a la app
+    const fondoFlotante = document.getElementById('fondo-flotante');
+    if (fondoFlotante) fondoFlotante.classList.add('oculto');
+
     reiniciarVistasEstudiante();
 
     ocultarPantalla('pantalla-ingreso-codigo');
@@ -315,12 +336,12 @@ function aplicarMenuPorRol() {
         navPuntajes.innerText = ' Resultados de las pruebas';
         if (navPqrs) navPqrs.innerText = ' Ayudas y PQRS';
         [navRanking, navPruebasProf, navRegistros].forEach(n => n.classList.add('oculto'));
-    }  else {
-    navPruebas.innerText = ' Pruebas';
-    navPuntajes.innerText = ' Historial de puntajes';
-    if (navPqrs) navPqrs.innerText = ' Ayudas y PQRS';
-    [navPuntaje, navRegistros, navAlmacenadas].forEach(n => n.classList.add('oculto'));
-}
+    } else {
+        navPruebas.innerText = ' Pruebas';
+        navPuntajes.innerText = ' Historial de puntajes';
+        if (navPqrs) navPqrs.innerText = ' Ayudas y PQRS';
+        [navPuntaje, navRegistros, navAlmacenadas].forEach(n => n.classList.add('oculto'));
+    }
 }
 
 function extraerGrado(gradoTexto) {
@@ -377,7 +398,7 @@ function mostrarSeccion(nombre) {
         if (rolActual === 'profesor' || rolActual === 'admin') {
             cardEstudiante.classList.add('oculto');
             cardCreadas.classList.remove('oculto');
-                if (rolActual === 'admin') {
+            if (rolActual === 'admin') {
                 cargarGruposAdmin(true);   // conserva nivel/prueba (p. ej. al volver de editar)
             } else {
                 cargarPruebasCreadas();
@@ -1236,7 +1257,7 @@ async function eliminarGrupo(grupo) {
         } else {
             mostrarAviso('⚠️ No se pudieron eliminar las preguntas:\n' + (resultado.error || 'Error desconocido.'));
         }
-     cargarGruposAdmin(true);
+        cargarGruposAdmin(true);
     } catch (err) {
         console.error('⚠️ Error al eliminar las preguntas:', err);
         mostrarAviso('⚠️ No se pudo conectar con el servidor.');
@@ -1245,6 +1266,10 @@ async function eliminarGrupo(grupo) {
 
 // ===================================================
 // 🎯 PROMEDIO (solo administradores)
+//
+// Un solo mínimo por nivel (B → A, A → S). El "de N" es la suma de las
+// preguntas de TODAS las pruebas del nivel, así que cambia solo si se
+// añaden o se quitan preguntas.
 // ===================================================
 let enviandoPromedio = false;
 
@@ -1288,7 +1313,7 @@ async function abrirModalPromedio() {
                 <div class="promedio-fila">
                     <div class="promedio-info">
                         <span class="promedio-nivel">Nivel ${escaparHtml(n.nivel)} → Nivel ${escaparHtml(n.siguiente)}</span>
-                        <span class="promedio-total">${textoCantidadPreguntas(total)} entre las dos sesiones</span>
+                        <span class="promedio-total">${textoCantidadPreguntas(total)} sumando todas las pruebas</span>
                         <span class="promedio-nota">${escaparHtml(notaHtml)}</span>
                     </div>
                     <div class="promedio-campo">
@@ -1355,7 +1380,7 @@ async function guardarPromedio() {
 
         if (respuesta.ok) {
             cerrarModalPromedio();
-            mostrarAviso('🎯 ¡Promedio guardado con éxito!\n\nLos estudiantes necesitarán ese mínimo de respuestas correctas (sumando las dos sesiones) para pasar de nivel.');
+            mostrarAviso('🎯 ¡Promedio guardado con éxito!\n\nLos estudiantes necesitarán ese mínimo de respuestas correctas, sumando todas las pruebas del nivel, para pasar al siguiente.');
         } else {
             error.innerText = resultado.error || 'No se pudo guardar el promedio.';
         }
@@ -1491,18 +1516,18 @@ function dibujarRegistros() {
     const cuerpoHtml = filas.map((f, i) => {
         const celdasHtml = columnas.map(c => {
             if (c.tipo === 'contrasena') {
-    const botonEditar = c.campo === 'codigo_unico'
-        ? `<button type="button" class="btn-ojo-tabla" title="Cambiar código único" aria-label="Cambiar código único" onclick="abrirModalEditarCodigo(${i})" ${modo ? 'disabled' : ''}>✏️</button>`
-        : '';
-    return `
-        <td>
-            <div class="pass-celda">
-                <span class="pass-texto" id="registro-pass-${i}-${c.campo}" data-visible="0">${CONTRASENA_OCULTA}</span>
-                <button type="button" class="btn-ojo-tabla" title="Mostrar contraseña" aria-label="Mostrar contraseña" onclick="alternarPasswordRegistro(${i}, this, '${c.campo}')">👁️</button>
-                ${botonEditar}
-            </div>
-        </td>`;
-}
+                const botonEditar = c.campo === 'codigo_unico'
+                    ? `<button type="button" class="btn-ojo-tabla" title="Cambiar código único" aria-label="Cambiar código único" onclick="abrirModalEditarCodigo(${i})" ${modo ? 'disabled' : ''}>✏️</button>`
+                    : '';
+                return `
+                    <td>
+                        <div class="pass-celda">
+                            <span class="pass-texto" id="registro-pass-${i}-${c.campo}" data-visible="0">${CONTRASENA_OCULTA}</span>
+                            <button type="button" class="btn-ojo-tabla" title="Mostrar contraseña" aria-label="Mostrar contraseña" onclick="alternarPasswordRegistro(${i}, this, '${c.campo}')">👁️</button>
+                            ${botonEditar}
+                        </div>
+                    </td>`;
+            }
             const valor = c.formato ? c.formato(f[c.campo]) : f[c.campo];
             return `<td>${escaparHtml(valor)}</td>`;
         }).join('');
@@ -3279,10 +3304,12 @@ async function cargarPuntajeActual() {
             `;
         }).join('');
 
+        // Mínimo para pasar de nivel: se cuentan las respuestas correctas de todas
+        // las pruebas del nivel (el servidor ya hace la suma).
         let minimoHtml = '';
         const siguienteNivel = obtenerSiguienteNivel(nivelReciente);
-        if (siguienteNivel && sesiones.length >= 2 && datosNivel.minimoCorrectas) {
-            minimoHtml = `<p class="puntaje-minimo">Para pasar al nivel ${siguienteNivel} se necesitan ${datosNivel.minimoCorrectas} de ${totalPreguntas} respuestas correctas entre las dos sesiones.</p>`;
+        if (siguienteNivel && datosNivel.minimoCorrectas) {
+            minimoHtml = `<p class="puntaje-minimo">Para pasar al nivel ${siguienteNivel} se necesitan ${datosNivel.minimoCorrectas} de ${datosNivel.totalNivel} respuestas correctas sumando todas las pruebas del nivel ${nivelReciente}. Llevas ${datosNivel.correctasNivel}.</p>`;
         }
 
         contenedor.innerHTML = `
@@ -3352,6 +3379,12 @@ function filaHistorialHtml(p) {
         ? fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
         : '';
 
+    // Tiempo que tardó el estudiante en presentar la sesión
+    const duracionTexto = formatearDuracion(p.duracion_segundos);
+    const duracionHtml = duracionTexto
+        ? `<span class="historial-duracion">⏱️ ${escaparHtml(duracionTexto)}</span>`
+        : '';
+
     const marcado = historialSeleccionados.has(p.id);
     const casilla = historialModoMultiple
         ? `<span class="historial-check" role="checkbox" aria-checked="${marcado}"></span>`
@@ -3372,9 +3405,12 @@ function filaHistorialHtml(p) {
         <div class="${clases}" data-id="${p.id}"${clickFila}>
             ${casilla}
             <div class="historial-nivel-pill">Nivel ${p.nivel} · Prueba ${p.prueba || 1} · Sesión ${p.sesion}</div>
-            <div class="historial-resultado">
-                <span class="historial-numero">${p.correctas}/${p.total}</span>
-                <span class="historial-porcentaje">${porcentaje}%</span>
+            <div class="historial-resultado-col">
+                <div class="historial-resultado">
+                    <span class="historial-numero">${p.correctas}/${p.total}</span>
+                    <span class="historial-porcentaje">${porcentaje}%</span>
+                </div>
+                ${duracionHtml}
             </div>
             <div class="historial-fecha">${fechaValida ? (fechaTexto + ' · ' + horaTexto) : ''}</div>
             ${menuMaterias}
@@ -3654,6 +3690,7 @@ async function cargarRanking() {
                             <span class="ranking-posicion">${etiquetaPos}</span>
                             <span class="ranking-chip ranking-chip-nombre">${escaparHtml(formatearNombre(e.nombre))}</span>
                             <span class="ranking-chip">${escaparHtml(formatearGrado(e.grado))}</span>
+                            <span class="ranking-chip">Puntaje global ${e.puntaje}/500</span>
                         </div>
                         <div class="ranking-linea-2">${pruebasHtml}</div>
                     </div>
@@ -3668,7 +3705,6 @@ async function cargarRanking() {
         });
     }
 }
-
 // ===================================================
 // MODAL PERSONALIZADO (reutilizable)
 // ===================================================
@@ -3787,6 +3823,10 @@ function cerrarSesion() {
     if (pqrsAdminContenido) pqrsAdminContenido.innerHTML = '';
     const formPqrs = document.getElementById('form-pqrs');
     if (formPqrs) formPqrs.reset();
+
+    // Se vuelve a mostrar el fondo flotante de las materias
+    const fondoFlotante = document.getElementById('fondo-flotante');
+    if (fondoFlotante) fondoFlotante.classList.remove('oculto');
 
     mostrarFormulario(rolActual);
 }
@@ -4118,8 +4158,8 @@ function obtenerSiguienteNivel(nivel) {
     return null;
 }
 
-// Sin indicar la prueba, el servidor considera el nivel aprobado si el
-// estudiante aprobó cualquiera de sus pruebas.
+// Sin indicar la prueba, el servidor suma las respuestas correctas de todas las
+// pruebas del nivel y las compara con el mínimo que fijó el administrador.
 async function estaNivelAprobado(nivel) {
     if (!usuarioActual || !usuarioActual.correo) return false;
     try {
@@ -4188,6 +4228,118 @@ let opcionSeleccionada = null;
 let respuestasMap = {};
 let cacheMaterias = {};
 
+// Momento (en milisegundos) en que el estudiante empezó la sesión.
+// Con esto se calcula cuánto tardó y se envía al servidor al calificar.
+let inicioSesionMs = 0;
+
+// ===================================================
+// ⏱️ TEMPORIZADOR DE LA PRUEBA
+// Tiempo total = (preguntas de la sesión × 2 min) + 5 min extra.
+// Al llegar a 00:00 la sesión se envía sola con lo que se alcanzó a responder.
+// ===================================================
+const SEGUNDOS_POR_PREGUNTA = 2 * 60;   // 2 minutos por pregunta
+const SEGUNDOS_EXTRA = 5 * 60;          // 5 minutos adicionales
+
+let intervaloTemporizador = null;
+let finTemporizador = 0;                // momento (ms) en que se acaba el tiempo
+let tokenTemporizador = 0;              // evita que una respuesta tardía arranque un reloj viejo
+let tiempoAgotado = false;
+
+function textoTemporizador(segundos) {
+    const m = Math.floor(segundos / 60);
+    const s = segundos % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function detenerTemporizador() {
+    clearInterval(intervaloTemporizador);
+    intervaloTemporizador = null;
+    tokenTemporizador++;
+    const el = document.getElementById('prueba-temporizador');
+    if (el) {
+        el.classList.remove('poco-tiempo');
+        el.textContent = '--:--';
+    }
+}
+
+function pintarTemporizador() {
+    const el = document.getElementById('prueba-temporizador');
+    if (!el) return;
+
+    const restante = Math.max(0, Math.ceil((finTemporizador - Date.now()) / 1000));
+    el.textContent = textoTemporizador(restante);
+    el.classList.toggle('poco-tiempo', restante <= 60);
+
+    if (restante <= 0) {
+        clearInterval(intervaloTemporizador);
+        intervaloTemporizador = null;
+        finalizarPorTiempo();
+    }
+}
+
+// Calcula el tiempo según las preguntas de la sesión y arranca el reloj
+async function arrancarTemporizadorSesion() {
+    detenerTemporizador();
+    const token = tokenTemporizador;
+    tiempoAgotado = false;
+
+    const btnSiguiente = document.getElementById('btn-siguiente-materia');
+    if (btnSiguiente) btnSiguiente.disabled = false;
+
+    try {
+        const url = `/api/conteo-preguntas?nivel=${encodeURIComponent(nivelActual)}&prueba=${pruebaActual}&sesion=${sesionActual}`;
+        const datos = await (await fetch(url)).json();
+        const totalPreguntas = Object.values(datos.conteo || {}).reduce((a, n) => a + Number(n), 0);
+
+        // Si el estudiante salió mientras cargaba, no se arranca nada
+        if (token !== tokenTemporizador || totalPreguntas === 0) return;
+
+        const segundos = totalPreguntas * SEGUNDOS_POR_PREGUNTA + SEGUNDOS_EXTRA;
+        finTemporizador = Date.now() + segundos * 1000;
+        pintarTemporizador();
+        intervaloTemporizador = setInterval(pintarTemporizador, 250);
+    } catch (err) {
+        console.error('⚠️ No se pudo iniciar el temporizador:', err);
+    }
+}
+
+// Se acabó el tiempo: las preguntas sin responder cuentan como incorrectas
+async function finalizarPorTiempo() {
+    if (tiempoAgotado) return;
+    tiempoAgotado = true;
+
+    const btnSiguiente = document.getElementById('btn-siguiente-materia');
+    if (btnSiguiente) btnSiguiente.disabled = true;
+
+    // Se cargan las materias que el estudiante todavía no había abierto
+    // para que sus preguntas se registren como sin responder
+    const materias = materiasPorSesion[sesionActual];
+    for (let i = 0; i < materias.length; i++) {
+        try {
+            if (!cacheMaterias[i]) {
+                const url = `/api/preguntas?nivel=${nivelActual}&prueba=${pruebaActual}&sesion=${sesionActual}` +
+                    `&materia=${encodeURIComponent(materias[i].nombre)}` +
+                    `&correo=${encodeURIComponent(usuarioActual.correo)}`;
+                const datos = await (await fetch(url)).json();
+                cacheMaterias[i] = datos.preguntas || [];
+            }
+            cacheMaterias[i].forEach(p => {
+                if (!respuestasMap[p.id]) respuestasMap[p.id] = '';
+            });
+        } catch (err) {
+            console.error('⚠️ No se pudieron cargar las preguntas pendientes:', err);
+        }
+    }
+
+    if (Object.keys(respuestasMap).length === 0) {
+        salirDePrueba();
+        mostrarAviso('⏰ Se acabó el tiempo.');
+        return;
+    }
+
+    await finalizarSesion();
+}
+
 function iniciarSesion(numero) {
     sesionActual = numero;
     indiceMateriaActual = 0;
@@ -4196,10 +4348,14 @@ function iniciarSesion(numero) {
     respuestasMap = {};
     cacheMaterias = {};
 
+    // Se anota el momento exacto en que empieza la sesión
+    inicioSesionMs = Date.now();
+
     document.getElementById('vista-sesiones').classList.add('oculto');
     document.getElementById('vista-prueba').classList.remove('oculto');
 
     cargarMateriaActual();
+    arrancarTemporizadorSesion();   // arranca el reloj de la sesión
 }
 
 function actualizarImagenEn(idWrap, idImagen, rutaImagen) {
@@ -4383,20 +4539,36 @@ async function finalizarSesion() {
         opcion_elegida: respuestasMap[id]
     }));
 
-    const respuesta = await fetch('/api/calificar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            respuestas: respuestasSesion,
-            correo: usuarioActual.correo,
-            nombre: usuarioActual.nombre,
-            nivel: nivelActual,
-            prueba: pruebaActual,
-            sesion: sesionActual
-        })
-    });
+    // Tiempo que tardó el estudiante en presentar la sesión (en segundos)
+    const duracionSegundos = inicioSesionMs > 0
+        ? Math.max(0, Math.round((Date.now() - inicioSesionMs) / 1000))
+        : null;
 
-    const resultado = await respuesta.json();
+    let respuesta;
+    let resultado;
+    try {
+        respuesta = await fetch('/api/calificar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                respuestas: respuestasSesion,
+                correo: usuarioActual.correo,
+                nombre: usuarioActual.nombre,
+                nivel: nivelActual,
+                prueba: pruebaActual,
+                sesion: sesionActual,
+                duracion_segundos: duracionSegundos
+            })
+        });
+        resultado = await respuesta.json();
+    } catch (err) {
+        console.error('⚠️ Error al enviar la sesión:', err);
+        // El estudiante se queda en la prueba con sus respuestas y puede volver a pulsar "Finalizar"
+        const btnSiguiente = document.getElementById('btn-siguiente-materia');
+        if (btnSiguiente) btnSiguiente.disabled = false;
+        mostrarAviso('⚠️ No se pudo conectar con el servidor.\n\nRevisa tu internet y pulsa "Finalizar sesión" de nuevo. Tus respuestas siguen guardadas en esta pantalla.');
+        return;
+    }
 
     if (respuesta.ok) {
         const siguienteNivel = obtenerSiguienteNivel(nivelActual);
@@ -4415,7 +4587,9 @@ async function finalizarSesion() {
         await sincronizarEstadoSesiones(nivelActual);
         salirDePrueba();
 
-        const mensajeResultado = '🎉 Terminaste la Sesión ' + sesionActual + '.\n\nResultado: ' +
+        // Si terminó por tiempo, el mensaje lo indica
+        const mensajeResultado = (tiempoAgotado ? '⏰ Se acabó el tiempo.\n\n' : '') +
+            '🎉 Terminaste la Sesión ' + sesionActual + '.\n\nResultado: ' +
             resultado.correctas + ' de ' + resultado.total + ' correctas.';
 
         if (nivelDesbloqueado) {
@@ -4426,8 +4600,10 @@ async function finalizarSesion() {
             mostrarAviso(mensajeResultado);
         }
     } else {
-        salirDePrueba();
-        mostrarAviso('⚠️ Error al calificar:\n' + (resultado.error || 'Error desconocido.'));
+        const btnSiguiente = document.getElementById('btn-siguiente-materia');
+        if (btnSiguiente) btnSiguiente.disabled = false;
+        mostrarAviso('⚠️ Error al calificar:\n' + (resultado.error || 'Error desconocido.') +
+            '\n\nTus respuestas siguen en pantalla. Corrige el problema e inténtalo de nuevo.');
     }
 }
 
@@ -4441,6 +4617,7 @@ function confirmarSalirPrueba() {
 }
 
 function salirDePrueba() {
+    detenerTemporizador();   // detiene el reloj al salir o terminar
     document.getElementById('vista-prueba').classList.add('oculto');
     document.getElementById('vista-sesiones').classList.remove('oculto');
 
@@ -4599,6 +4776,41 @@ async function alElegirArchivoRegistros(input) {
     } finally {
         if (ayuda) ayuda.innerText = '';
     }
+}
+// ===================================================
+// 👥 EQUIPO DE DESARROLLO (datos fijos, no editables desde la app)
+// Pegar AL FINAL de script.js
+// Las fotos van en la carpeta "equipo/" junto a index.html.
+// foto: null deja el círculo vacío.
+// ===================================================
+const EQUIPO_DESARROLLO = Object.freeze([
+     Object.freeze({ nombre: 'MIRIAN EDITH ALVAREZ JAQUE',        rol: 'Desarrolladora', foto: 'equipo/mirian-alvarez.jpeg' }),
+    Object.freeze({ nombre: 'AMY VALENTINA CARVAJAL',            rol: 'Desarrolladora', foto: 'equipo/amy-carvajal.jpeg' }),
+    Object.freeze({ nombre: 'SHARIT DALIANA GUTIERREZ SANDOBAL', rol: 'Desarrolladora', foto: 'equipo/sharit-gutierrez.jpeg' })
+]);
+
+function abrirModalEquipo() {
+    document.getElementById('modal-equipo-lista').innerHTML = EQUIPO_DESARROLLO.map(p => {
+        const fotoHtml = p.foto
+            ? `<img class="equipo-foto" src="${escaparHtml(p.foto)}" alt="" draggable="false">`
+            : '<div class="equipo-foto equipo-foto-vacia"></div>';
+
+        return `
+            <div class="equipo-fila">
+                ${fotoHtml}
+                <div class="equipo-datos">
+                    <p class="equipo-nombre">${escaparHtml(p.nombre)}</p>
+                    <p class="equipo-rol">${escaparHtml(p.rol)}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('modal-equipo').classList.remove('oculto');
+}
+
+function cerrarModalEquipo() {
+    document.getElementById('modal-equipo').classList.add('oculto');
 }
 
 // Refresca cada 30 segundos la lista de pruebas de profesores mientras el
