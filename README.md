@@ -12,6 +12,7 @@ Plataforma de preparación para exámenes Pre-ICFES con gestión de estudiantes,
 - Preguntas de Inglés de 3 o 4 opciones y emparejamiento con banco de palabras
 - Temporizador por sesión e historial con duración y revisión de respuestas
 - Interfaz móvil y navegación del historial con los botones del navegador
+- Créditos de las creadoras disponibles desde la pantalla pública, sin iniciar sesión
 - Sistema de resultados, aprobación por nivel y ranking
 - Modo examen seguro
 
